@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     // Clear the auth cookie
     document.cookie = "simgizi-auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     router.push("/login");
-    router.refresh(); // Ensure the middleware re-evaluates the cookie state
+    router.refresh(); // Ensure the proxy re-evaluates the cookie state
   };
 
   const renderContent = (collapsed: boolean, isMobile = false) => (

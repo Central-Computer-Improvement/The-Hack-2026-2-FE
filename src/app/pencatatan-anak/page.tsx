@@ -103,8 +103,14 @@ export default function PencatatanAnakPage() {
     formData.namaBalita,
   ]);
 
+  const isNikInvalid =
+    formData.nikOrangTua.length > 0 && formData.nikOrangTua.length < 16;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.nikOrangTua.length !== 16) {
+      return;
+    }
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 4000);
   };
@@ -200,17 +206,33 @@ export default function PencatatanAnakPage() {
                     </label>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      maxLength={16}
                       required
                       placeholder="Masukkan 16 digit NIK"
                       value={formData.nikOrangTua || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const val = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 16);
                         setFormData({
                           ...formData,
-                          nikOrangTua: e.target.value,
-                        })
-                      }
-                      className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                          nikOrangTua: val,
+                        });
+                      }}
+                      className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border transition-colors placeholder:text-zinc-400 focus:outline-none ${
+                        isNikInvalid
+                          ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
+                          : formData.nikOrangTua.length === 16
+                            ? "bg-white dark:bg-[#1e222d] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
+                            : "bg-white dark:bg-[#1e222d] border-gray-200 dark:border-zinc-700 focus:border-[#0d472c]"
+                      }`}
                     />
+                    {isNikInvalid && (
+                      <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
+                        <span>NIK harus terdiri dari 16 digit angka</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 

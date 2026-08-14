@@ -15,7 +15,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SimGizi - Login",
+  title: "SimGizi",
   description: "Sistem Informasi & Simulasi Gizi",
 };
 

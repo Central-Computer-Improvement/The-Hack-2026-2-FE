@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Search, Bell, Mail, User, Menu } from "lucide-react";
 import ThemeToggle from "@/components/layouts/ThemeToggle";
 
@@ -9,6 +9,22 @@ interface TopbarProps {
 }
 
 export const Topbar: React.FC<TopbarProps> = ({ onOpenMobileMenu }) => {
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  /* Global Keyboard Shortcut: Ctrl + F or Cmd + F */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <header className="w-full h-[66px] bg-white/90 dark:bg-[#161920]/90 backdrop-blur-md border-b border-[#e6e8eb] dark:border-[#262a34] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 transition-colors duration-200 select-none">
       {/* Left: Mobile Menu Button & Search Input */}
@@ -25,15 +41,16 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobileMenu }) => {
 
         {/* Search Input Bar */}
         <div className="relative flex items-center">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 pointer-events-none stroke-[1.8]" />
+          <Search className="w-[18px] h-[18px] text-zinc-400 absolute left-3.5 pointer-events-none stroke-[1.8]" />
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search"
-            className="w-44 sm:w-64 md:w-80 h-10 pl-10 pr-12 sm:pr-16 bg-[#f8f9fa] dark:bg-[#1e222d] border border-gray-200/80 dark:border-zinc-800 rounded-xl font-inter text-[13.5px] sm:text-[14px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-[#0d472c] dark:focus:border-[#2d6a4f] transition-all"
+            className="w-48 sm:w-72 md:w-96 lg:w-[380px] xl:w-[420px] h-[42px] pl-10 pr-16 bg-white dark:bg-[#1e222d] border border-gray-200 dark:border-zinc-700/80 rounded-xl font-inter text-[13.5px] sm:text-[14px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-[#0d472c] dark:focus:border-emerald-600 transition-all"
           />
-          <kbd className="hidden sm:inline-block absolute right-3 font-inter text-[11px] font-medium text-zinc-400 dark:text-zinc-500 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-md px-1.5 py-0.5 pointer-events-none">
+          <span className="hidden sm:inline-block absolute right-3.5 font-inter text-[13px] font-normal text-zinc-400 dark:text-zinc-500 pointer-events-none">
             Ctrl +F
-          </kbd>
+          </span>
         </div>
       </div>
 

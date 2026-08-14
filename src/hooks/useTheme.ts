@@ -1,26 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 export type Theme = "light" | "dark";
 
-export function useTheme() {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+let globalTheme: Theme = "light";
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem("simgizi-theme") as Theme | null;
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setTheme(savedTheme);
-      applyThemeToDOM(savedTheme);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-      applyThemeToDOM("dark");
+function getInitialTheme(): Theme {
+  if (typeof document !== "undefined") {
+    if (document.documentElement.classList.contains("dark")) {
+      return "dark";
     }
-  }, []);
+    const saved = localStorage.getItem("simgizi-theme");
+    if (saved === "dark" || saved === "light") {
+      return saved;
+    }
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
+  }
+  return "light";
+}
+
+if (typeof window !== "undefined") {
+  globalTheme = getInitialTheme();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot(): Theme {
+  return globalTheme;
+}
+
+function getServerSnapshot(): Theme {
+  return "light";
+}
+
+export function useTheme() {
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const applyThemeToDOM = (t: Theme) => {
+    if (typeof document === "undefined") return;
     if (t === "dark") {
       document.documentElement.classList.add("dark");
       document.documentElement.setAttribute("data-theme", "dark");
@@ -31,20 +55,21 @@ export function useTheme() {
   };
 
   const toggleTheme = (targetTheme?: Theme) => {
-    const nextTheme = targetTheme || (theme === "dark" ? "light" : "dark");
+    const nextTheme = targetTheme || (globalTheme === "dark" ? "light" : "dark");
+    globalTheme = nextTheme;
 
-    // Enable smooth theme transition class for duration of CSS transition
-    document.documentElement.classList.add("theme-transitioning");
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.add("theme-transitioning");
+      localStorage.setItem("simgizi-theme", nextTheme);
+      applyThemeToDOM(nextTheme);
 
-    setTheme(nextTheme);
-    localStorage.setItem("simgizi-theme", nextTheme);
-    applyThemeToDOM(nextTheme);
+      setTimeout(() => {
+        document.documentElement.classList.remove("theme-transitioning");
+      }, 400);
+    }
 
-    // Remove transition class after animation completes (matches 0.35s CSS)
-    setTimeout(() => {
-      document.documentElement.classList.remove("theme-transitioning");
-    }, 400);
+    listeners.forEach((listener) => listener());
   };
 
-  return { theme, toggleTheme, mounted };
+  return { theme, toggleTheme, mounted: true };
 }

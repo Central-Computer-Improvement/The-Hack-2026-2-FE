@@ -31,8 +31,8 @@ export const LoginForm: React.FC = () => {
     }
 
     if (!hasError) {
-      // Set a cookie to simulate authentication
-      document.cookie = "simgizi-auth=true; path=/; max-age=86400"; // 1 day expiration
+      // Set session cookie
+      document.cookie = "simgizi-auth=true; path=/; SameSite=Strict";
 
       // Redirect to dashboard
       router.push("/");

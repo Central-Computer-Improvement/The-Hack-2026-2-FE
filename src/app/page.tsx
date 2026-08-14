@@ -35,10 +35,10 @@ export default function DashboardPage() {
         <Topbar onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
 
         {/* Full-width Content Container */}
-        <main className="p-3.5 sm:p-5 xl:p-6 [@media(max-height:849px)]:p-3.5 flex flex-col space-y-3 sm:space-y-4 xl:space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1 xl:min-h-0 xl:overflow-hidden">
+        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1 xl:min-h-0 xl:overflow-hidden">
           {/* Dashboard Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0">
-            <h1 className="font-inter text-[22px] sm:text-[26px] [@media(min-height:850px)]:text-[28px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+            <h1 className="font-inter text-[24px] sm:text-[28px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
               Dashboard Gizi
             </h1>
 
@@ -46,18 +46,18 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2.5 sm:gap-3">
               <Link
                 href="/pencatatan-anak"
-                className="px-3.5 sm:px-4 h-[38px] sm:h-[42px] bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#0a3923] text-white rounded-xl font-inter text-[13.5px] sm:text-[14.5px] font-medium flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
+                className="px-4 h-[42px] bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#0a3923] text-white rounded-xl font-inter text-[14px] font-medium flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
               >
-                <Plus className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[1.8]" />
+                <Plus className="w-[18px] h-[18px] stroke-[1.8]" />
                 <span>Tambah data anak</span>
               </Link>
 
               <button
                 type="button"
                 onClick={() => setShowWhoRules(true)}
-                className="px-3.5 sm:px-4 h-[38px] sm:h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 hover:bg-emerald-100 dark:hover:bg-[#22352b] text-[#0d472c] dark:text-emerald-300 font-inter text-[13px] sm:text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 hover:bg-emerald-100 dark:hover:bg-[#22352b] text-[#0d472c] dark:text-emerald-300 font-inter text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <Book className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[1.8]" />
+                <Book className="w-[18px] h-[18px] stroke-[1.8]" />
                 <span>Rumusan &amp; Aturan WHO</span>
               </button>
             </div>

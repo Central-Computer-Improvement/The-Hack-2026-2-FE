@@ -196,7 +196,7 @@ export default function PencatatanAnakPage() {
 
                   <div>
                     <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      NIK Orang Tua Baslita
+                      NIK Orang Tua Balita
                     </label>
                     <input
                       type="text"
@@ -223,7 +223,7 @@ export default function PencatatanAnakPage() {
                     <input
                       type="text"
                       required
-                      placeholder="Masukkan nama balita"
+                      placeholder="Masukan umur"
                       value={formData.umurBulan}
                       onChange={(e) =>
                         setFormData({ ...formData, umurBulan: e.target.value })
@@ -291,7 +291,7 @@ export default function PencatatanAnakPage() {
 
                   <div>
                     <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      Tinggi Badan (kg)
+                      Tinggi Badan (cm)
                     </label>
                     <input
                       type="text"

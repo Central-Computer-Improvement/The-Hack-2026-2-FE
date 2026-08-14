@@ -74,13 +74,13 @@ export const NutritionChart: React.FC<NutritionChartProps> = ({ onNavigateToReka
   const tooltipTop = Math.max(10, mousePos.y - 60);
 
   return (
-    <section className="w-full h-full flex-1 bg-white dark:bg-[#161920] border border-[#e6e8eb] dark:border-[#262a34] rounded-[24px] p-4 sm:p-5 [@media(min-height:850px)]:p-7 flex flex-col shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-colors duration-200 select-none xl:overflow-hidden">
+    <section className="w-full h-full flex-1 bg-white dark:bg-[#161920] border border-[#e6e8eb] dark:border-[#262a34] rounded-[20px] [@media(min-height:850px)]:rounded-[24px] p-3.5 sm:p-5 [@media(min-height:850px)]:p-7 flex flex-col shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-colors duration-200 select-none xl:overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 mb-2.5 [@media(min-height:850px)]:mb-4">
-        <h2 className="font-inter text-[18px] sm:text-[19px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
+      <div className="shrink-0 mb-2 [@media(min-height:850px)]:mb-4">
+        <h2 className="font-inter text-[16px] sm:text-[18px] [@media(min-height:850px)]:text-[19px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
           Distribusi Status Gizi Balita
         </h2>
-        <p className="font-inter text-[13px] sm:text-[13.5px] text-zinc-400 dark:text-zinc-500 mt-1">
+        <p className="font-inter text-[12px] sm:text-[13px] [@media(min-height:850px)]:text-[13.5px] text-zinc-400 dark:text-zinc-500 mt-0.5 sm:mt-1">
           Jumlah anak per kategori z-score WHO
         </p>
       </div>
@@ -88,7 +88,7 @@ export const NutritionChart: React.FC<NutritionChartProps> = ({ onNavigateToReka
       {/* Interactive Chart Container */}
       <div
         onMouseMove={handleMouseMove}
-        className="w-full flex-1 min-h-0 bg-[#f8f9fa] dark:bg-[#1e222d] border border-gray-200/70 dark:border-zinc-800 rounded-[18px] p-3 sm:p-3.5 [@media(min-height:850px)]:p-4 relative overflow-hidden flex flex-col"
+        className="w-full h-[220px] sm:h-[240px] xl:h-auto xl:flex-1 min-h-0 bg-[#f8f9fa] dark:bg-[#1e222d] border border-gray-200/70 dark:border-zinc-800 rounded-[14px] [@media(min-height:850px)]:rounded-[18px] p-2.5 sm:p-3 [@media(min-height:850px)]:p-4 relative overflow-hidden flex flex-col"
       >
         {/* Dynamic Mouse-Following Tooltip Popup */}
         {hoveredBar && (
@@ -109,7 +109,7 @@ export const NutritionChart: React.FC<NutritionChartProps> = ({ onNavigateToReka
         )}
 
         {/* Bar Chart Graphics */}
-        <div className="flex-1 min-h-0 w-full flex items-end justify-between px-1 sm:px-2 pt-3 pb-1 border-b border-gray-200 dark:border-zinc-700/80 relative">
+        <div className="flex-1 min-h-0 w-full flex items-end justify-between px-1 sm:px-2 pt-2.5 sm:pt-3 pb-1 border-b border-gray-200 dark:border-zinc-700/80 relative">
           {/* Grid background dashed lines */}
           <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-40 px-2 py-3">
             <div className="w-full border-b border-dashed border-gray-300 dark:border-zinc-700" />
@@ -131,14 +131,14 @@ export const NutritionChart: React.FC<NutritionChartProps> = ({ onNavigateToReka
                   height: `${bar.heightPercent}%`,
                   backgroundColor: bar.color,
                 }}
-                className="w-full max-w-[42px] sm:max-w-[52px] rounded-t-sm transition-all duration-300 group-hover:brightness-110 group-hover:scale-y-[1.02] transform origin-bottom shadow-xs"
+                className="w-full max-w-[40px] sm:max-w-[52px] rounded-t-sm transition-all duration-300 group-hover:brightness-110 group-hover:scale-y-[1.02] transform origin-bottom shadow-xs"
               />
             </div>
           ))}
         </div>
 
         {/* X Axis Labels */}
-        <div className="flex justify-between items-center px-1 sm:px-2 mt-1.5 font-inter text-[11px] sm:text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
+        <div className="flex justify-between items-center px-1 sm:px-2 mt-1.5 font-inter text-[10.5px] sm:text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
           {chartData.map((bar) => (
             <div key={bar.id} className="flex-1 text-center truncate px-0.5">
               {bar.category}
@@ -148,11 +148,11 @@ export const NutritionChart: React.FC<NutritionChartProps> = ({ onNavigateToReka
       </div>
 
       {/* Button to navigate */}
-      <div className="mt-3 [@media(min-height:850px)]:mt-4 shrink-0">
+      <div className="mt-2.5 sm:mt-3 [@media(min-height:850px)]:mt-4 shrink-0">
         <button
           type="button"
           onClick={handleLihatSelengkapnya}
-          className="w-full py-2.5 sm:py-3 bg-[#0d472c] hover:bg-[#0a3923] text-white font-inter text-[13.5px] sm:text-[14px] font-semibold rounded-xl transition-colors cursor-pointer text-center shadow-xs"
+          className="w-full py-2 sm:py-2.5 [@media(min-height:850px)]:py-3 bg-[#0d472c] hover:bg-[#0a3923] text-white font-inter text-[13px] sm:text-[13.5px] [@media(min-height:850px)]:text-[14px] font-semibold rounded-xl transition-colors cursor-pointer text-center shadow-xs"
         >
           Lihat selengkapnya
         </button>

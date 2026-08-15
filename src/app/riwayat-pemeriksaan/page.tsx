@@ -70,12 +70,13 @@ export default function RiwayatPemeriksaanPage() {
         return "bg-[#eaf5ec] dark:bg-emerald-950/40 text-[#0d472c] dark:text-emerald-300 font-medium";
 
       case "Gizi Kurang":
-        return "bg-[#FFF8DD] dark:bg-amber-950/40 text-[#B4540A] dark:text-amber-300 font-medium";
+        return "bg-[#fef6dc] dark:bg-[#332b00] text-[#b45309] dark:text-[#fde047] font-medium";
 
       case "Gizi Buruk":
+        return "bg-[#fff0eb] dark:bg-[#3a1d17] text-[#c2410c] dark:text-[#FFA382] font-medium";
+
       case "Stunting":
-      case "Obesitas":
-        return "bg-[#FDEAEA] dark:bg-rose-950/40 text-[#B91C1C] dark:text-rose-300 font-medium";
+        return "bg-[#fde8e8] dark:bg-[#3b1212] text-[#a81a1a] dark:text-[#f87171] font-medium";
 
       default:
         return "bg-gray-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium";
@@ -110,7 +111,7 @@ export default function RiwayatPemeriksaanPage() {
       {/* STATUS GIZI */}
       <td className="py-3 px-4">
         <span
-          className={`px-3 py-1.5 rounded-lg text-[12.5px] inline-block ${getBadgeStyle(
+          className={`px-2.5 py-1 rounded-[6px] text-[12px] font-medium inline-block ${getBadgeStyle(
             item.statusGizi,
           )}`}
         >
@@ -131,7 +132,7 @@ export default function RiwayatPemeriksaanPage() {
   );
 
   return (
-    <div className="flex flex-col xl:flex-row min-h-screen xl:h-screen xl:overflow-hidden bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter select-none">
+    <div className="flex flex-col lg:flex-row min-h-screen xl:h-screen xl:overflow-hidden bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter select-none">
       {/* =========================================================
           SIDEBAR
       ========================================================= */}

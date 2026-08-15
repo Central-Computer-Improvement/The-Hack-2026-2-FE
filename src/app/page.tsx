@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const [showWhoRules, setShowWhoRules] = useState(false);
 
   return (
-    <div className="flex flex-col xl:flex-row min-h-screen xl:h-screen xl:overflow-hidden bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter transition-colors duration-200">
+    <div className="flex flex-col lg:flex-row min-h-screen xl:h-screen xl:overflow-hidden bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter transition-colors duration-200">
       {/* Responsive Sidebar (W: 290px on Desktop) */}
       <Sidebar
         currentTab="dashboard"
@@ -55,10 +55,10 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowWhoRules(true)}
-                className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 hover:bg-emerald-100 dark:hover:bg-[#22352b] text-[#0d472c] dark:text-emerald-300 font-inter text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 text-[#0d472c] dark:text-emerald-300 font-inter text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Book className="w-[18px] h-[18px] stroke-[1.8]" />
-                <span>Rumusan &amp; Aturan WHO</span>
+                <span>Rumus & Aturan WHO</span>
               </button>
             </div>
           </div>
@@ -68,13 +68,13 @@ export default function DashboardPage() {
 
           {/* Section 2: Bottom Grid (Stunting Alerts + Distribution Chart) */}
           <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 xl:gap-4 [@media(min-height:850px)]:gap-5 w-full flex-1 xl:min-h-0">
-            {/* Left Column: Peringatan Dini Gizi & Stunting */}
-            <div className="w-full xl:w-1/2 flex flex-col flex-1 xl:min-h-0">
+            {/* Peringatan Dini Gizi & Stunting: Di HP tampil di bawah chart (order-2), di Desktop di kiri (xl:order-1) */}
+            <div className="w-full xl:w-1/2 flex flex-col flex-1 xl:min-h-0 order-2 xl:order-1">
               <StuntingAlerts />
             </div>
 
-            {/* Right Column: Distribusi Status Gizi Balita */}
-            <div className="w-full xl:w-1/2 flex flex-col flex-1 xl:min-h-0">
+            {/* Distribusi Status Gizi: Di HP tampil tepat setelah Ringkasan (order-1), di Desktop di kanan (xl:order-2) */}
+            <div className="w-full xl:w-1/2 flex flex-col flex-1 xl:min-h-0 order-1 xl:order-2">
               <NutritionChart />
             </div>
           </div>

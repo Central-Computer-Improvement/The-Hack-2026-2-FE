@@ -6,7 +6,7 @@ import Topbar from "@/components/layouts/Topbar";
 import WhoRulesModal from "@/components/_shared/WhoRulesModal";
 import CustomSelect from "@/components/forms/CustomSelect";
 import CustomDatePicker from "@/components/forms/CustomDatePicker";
-import { Book, Sparkles, CheckCircle2 } from "lucide-react";
+import { Book, CheckCircle2 } from "lucide-react";
 
 export default function PencatatanAnakPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -59,15 +59,7 @@ export default function PencatatanAnakPage() {
     let badgeColor =
       "bg-[#eaf5ec] dark:bg-emerald-950/60 text-[#0d472c] dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60";
 
-    if (zBB > 3.0 || zBB_TB > 3.0) {
-      status = "Obesitas";
-      badgeColor =
-        "bg-[#fde8e8] dark:bg-rose-950/60 text-[#e02424] dark:text-rose-300 border-rose-200 dark:border-rose-900/60";
-    } else if (zBB > 2.0 || zBB_TB > 2.0) {
-      status = "Gizi Lebih";
-      badgeColor =
-        "bg-[#fff7ed] dark:bg-orange-950/60 text-[#c2410c] dark:text-orange-300 border-orange-200 dark:border-orange-900/60";
-    } else if (zTB < -3.0 || zBB < -3.0 || zBB_TB < -3.0) {
+    if (zTB < -3.0 || zBB < -3.0 || zBB_TB < -3.0) {
       status = "Stunting";
       badgeColor =
         "bg-[#fdeaea] dark:bg-rose-950/60 text-[#b91c1c] dark:text-rose-300 border-rose-200 dark:border-rose-900/60";
@@ -83,8 +75,8 @@ export default function PencatatanAnakPage() {
 
     const nama = formData.namaBalita || "Pasien";
     const aiAdvice = `[ANALISIS MEDIS KEMENKES RI & WHO] Pasien ${nama} (${usia} Bulan) terindikasi status ${status} dengan Z-Score BB/TB ${zBBTBStr} (BB ${bb} kg pada TB ${tb} cm). ${
-      status === "Obesitas" || status === "Stunting"
-        ? "Berisiko tinggi terhadap sindrom metabolik dan gangguan kognitif dini. Segera rujuk ke Dokter Spesialis Anak untuk resep evaluasi diet klinis & restrukturisasi asupan kalori murni."
+      status === "Stunting" || status === "Gizi Buruk"
+        ? "Berisiko tinggi terhadap gangguan pertumbuhan dan kognitif dini. Segera konsultasikan ke Posyandu/Puskesmas untuk pemantauan dan intervensi gizi terpadu."
         : "Pertahankan pemantauan gizi rutin bulanan dan berikan asupan makanan bergizi seimbang."
     }`;
 
@@ -121,7 +113,7 @@ export default function PencatatanAnakPage() {
   ];
 
   return (
-    <div className="flex flex-col xl:flex-row min-h-screen bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter transition-colors duration-200">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter transition-colors duration-200">
       {/* Sidebar */}
       <Sidebar
         currentTab="pencatatan-anak"
@@ -148,15 +140,14 @@ export default function PencatatanAnakPage() {
               Pencatatan Data Anak
             </h1>
 
-            {/* WHO Rules Button */}
-            <button
-              type="button"
-              onClick={() => setShowWhoRules(true)}
-              className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 hover:bg-emerald-100 dark:hover:bg-[#22352b] text-[#0d472c] dark:text-emerald-300 font-inter text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <Book className="w-[18px] h-[18px] stroke-[1.8]" />
-              <span>Rumusan &amp; Aturan WHO</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setShowWhoRules(true)}
+                className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 text-[#0d472c] dark:text-emerald-300 font-inter text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Book className="w-[18px] h-[18px] stroke-[1.8]" />
+                <span>Rumus & Aturan WHO</span>
+              </button>
           </div>
 
           {/* Success Alert Banner */}
@@ -169,258 +160,173 @@ export default function PencatatanAnakPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
-            <section className="lg:col-span-2 h-max bg-white dark:bg-[#161920] border border-[#e6e8eb] dark:border-[#262a34] rounded-[24px] p-5 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-colors duration-200">
-              <h2 className="font-inter text-[18px] sm:text-[19px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
-                Peringatan Dini Gizi & Stunting
-              </h2>
-              <p className="font-inter text-[13px] sm:text-[13.5px] text-zinc-400 dark:text-zinc-500 mt-1">
-                Balita yang memerlukan tindakan intervensi
-              </p>
+          <section className="w-full bg-white dark:bg-[#161920] border border-gray-200/70 dark:border-zinc-800/70 rounded-[24px] p-5 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-colors duration-200">
+            <h2 className="font-inter text-[18px] sm:text-[19px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
+              Peringatan Dini Gizi & Stunting
+            </h2>
+            <p className="font-inter text-[13px] sm:text-[13.5px] text-zinc-400 dark:text-zinc-500 mt-1">
+              Balita yang memerlukan tindakan intervensi
+            </p>
 
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-[32px] mt-[32px]"
-              >
-                {/* Row 1: Nama Lengkap Balita & NIK Orang Tua */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      Nama Lengkap Balita
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Masukkan nama balita"
-                      value={formData.namaBalita}
-                      onChange={(e) =>
-                        setFormData({ ...formData, namaBalita: e.target.value })
-                      }
-                      className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      NIK Orang Tua Balita
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={16}
-                      required
-                      placeholder="Masukkan 16 digit NIK"
-                      value={formData.nikOrangTua || ""}
-                      onChange={(e) => {
-                        const val = e.target.value
-                          .replace(/\D/g, "")
-                          .slice(0, 16);
-                        setFormData({
-                          ...formData,
-                          nikOrangTua: val,
-                        });
-                      }}
-                      className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border transition-colors placeholder:text-zinc-400 focus:outline-none ${
-                        isNikInvalid
-                          ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
-                          : formData.nikOrangTua.length === 16
-                            ? "bg-white dark:bg-[#1e222d] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
-                            : "bg-white dark:bg-[#1e222d] border-gray-200 dark:border-zinc-700 focus:border-[#0d472c]"
-                      }`}
-                    />
-                    {isNikInvalid && (
-                      <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
-                        <span>NIK harus terdiri dari 16 digit angka</span>
-                      </p>
-                    )}
-                  </div>
+            <form onSubmit={handleSubmit} className="space-y-[32px] mt-[32px]">
+              {/* Row 1: Nama Lengkap Balita & NIK Orang Tua */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                    Nama Lengkap Balita
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Masukkan nama balita"
+                    value={formData.namaBalita}
+                    onChange={(e) =>
+                      setFormData({ ...formData, namaBalita: e.target.value })
+                    }
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                  />
                 </div>
 
-                {/* Row 2: Umur, Jenis Kelamin, Nama Orang Tua */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      Umur (Bulan)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Masukan umur"
-                      value={formData.umurBulan}
-                      onChange={(e) =>
-                        setFormData({ ...formData, umurBulan: e.target.value })
-                      }
-                      className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      Jenis Kelamin
-                    </label>
-                    <CustomSelect
-                      options={[
-                        { value: "L", label: "Laki - Laki" },
-                        { value: "P", label: "Perempuan" },
-                      ]}
-                      value={formData.jenisKelamin}
-                      onChange={(val) =>
-                        setFormData({ ...formData, jenisKelamin: val })
-                      }
-                      placeholder="Pilih jenis kelamin"
-                      containerClassName="w-full flex"
-                      triggerClassName="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      Nama Orang Tua
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Masukkan nama lengkap"
-                      value={formData.namaOrangTua || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          namaOrangTua: e.target.value,
-                        })
-                      }
-                      className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                  </div>
+                <div>
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                    NIK Orang Tua Balita
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={16}
+                    required
+                    placeholder="Masukkan 16 digit NIK"
+                    value={formData.nikOrangTua || ""}
+                    onChange={(e) => {
+                      const val = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 16);
+                      setFormData({
+                        ...formData,
+                        nikOrangTua: val,
+                      });
+                    }}
+                    className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border transition-colors placeholder:text-zinc-400 focus:outline-none ${
+                      isNikInvalid
+                        ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
+                        : formData.nikOrangTua.length === 16
+                          ? "bg-white dark:bg-[#1e222d] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
+                          : "bg-white dark:bg-[#1e222d] border-gray-200 dark:border-zinc-700 focus:border-[#0d472c]"
+                    }`}
+                  />
+                  {isNikInvalid && (
+                    <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
+                      <span>NIK harus terdiri dari 16 digit angka</span>
+                    </p>
+                  )}
                 </div>
-
-                {/* Row 3: Berat Badan & Tinggi Badan */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      Berat Badan (kg)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Masukan Berat Badan"
-                      value={formData.beratBadan}
-                      onChange={(e) =>
-                        setFormData({ ...formData, beratBadan: e.target.value })
-                      }
-                      className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                      Tinggi Badan (cm)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Masukan Tinggi Badan"
-                      value={formData.tinggiBadan}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          tinggiBadan: e.target.value,
-                        })
-                      }
-                      className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#072a1a] text-white font-inter text-[15.5px] font-medium rounded-[8px] transition-colors shadow-xs cursor-pointer mt-4"
-                >
-                  Tambah data balita
-                </button>
-              </form>
-            </section>
-
-            {/* Right Column: Preview / Ringkasan (lg:col-span-1) */}
-            <aside className="lg:col-span-1 self-start bg-white dark:bg-[#161920] border border-[#e6e8eb] dark:border-[#262a34] rounded-[24px] p-5 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-colors duration-200">
-              <div className="flex items-center gap-3 mb-[16px]">
-                <Sparkles
-                  className="w-6 h-6 text-[#0d472c] dark:text-emerald-400"
-                  strokeWidth={2.5}
-                />
-                <h2 className="font-inter text-[18px] sm:text-[20px] font-bold text-[#0d472c] dark:text-emerald-400">
-                  Analisis AI Real Time
-                </h2>
               </div>
 
-              {!calcResult ? (
-                /* Placeholder AI Box (Matches User Screenshot) */
-                <div className="w-full bg-[#fbf9ff] dark:bg-[#1a1625] border border-[#f3e8ff] dark:border-[#3b2a5a] rounded-[10px] py-[48px] px-[18px] flex flex-col items-center justify-center text-center gap-[8px]">
-                  <div className="text-[#5b21b6] dark:text-[#a855f7]">
-                    <Sparkles className="w-10 h-10" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="font-inter text-[16.5px] sm:text-[18px] font-bold text-[#5b21b6] dark:text-[#d8b4fe]">
-                    Ketikkan Berat &amp; Tinggi Badan balita.
-                  </h3>
-                  <p className="font-inter text-[14.5px] text-[#71717a] dark:text-[#a1a1aa] leading-relaxed max-w-[280px] mx-auto">
-                    Kalkulasi Z-score WHO &amp; Analisis Medis AI Gemini akan
-                    otomatis diproses secara real-time di sini.
-                  </p>
+              {/* Row 2: Umur, Jenis Kelamin, Nama Orang Tua */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div>
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                    Umur (Bulan)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Masukan umur"
+                    value={formData.umurBulan}
+                    onChange={(e) =>
+                      setFormData({ ...formData, umurBulan: e.target.value })
+                    }
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                  />
                 </div>
-              ) : (
-                /* Actual AI Analysis Results */
-                <div className="space-y-4">
-                  <div className="w-full bg-[#f8f9fa] dark:bg-[#1e222d] border border-gray-200/70 dark:border-zinc-800 rounded-2xl p-4 space-y-2.5 font-inter text-[13.5px]">
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-600 dark:text-zinc-400">
-                        Z-Score BB/U:
-                      </span>
-                      <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                        {calcResult.zScoreBBU}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-600 dark:text-zinc-400">
-                        Z-Score TB/U:
-                      </span>
-                      <span className="font-bold text-[#e02424] dark:text-rose-400">
-                        {calcResult.zScoreTBU}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-600 dark:text-zinc-400">
-                        Z-Score BB/TB:
-                      </span>
-                      <span className="font-bold text-[#9333ea] dark:text-purple-400">
-                        {calcResult.zScoreBBTB}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <span className="font-inter text-[13px] font-semibold text-zinc-800 dark:text-zinc-200 block">
-                      Status Gizi (Otomatis WHO):
-                    </span>
-                    <span
-                      className={`inline-block border px-3 py-1.5 rounded-lg font-inter text-[12.5px] font-bold ${calcResult.statusBadgeColor}`}
-                    >
-                      {calcResult.statusGizi}
-                    </span>
-                  </div>
-
-                  <div className="bg-[#faf5ff] dark:bg-[#20192a] border border-[#e9d5ff] dark:border-[#4c2877] rounded-2xl p-4 space-y-2 font-inter mt-4">
-                    <div className="flex items-center gap-2 font-bold text-[#7e22ce] dark:text-purple-300 text-[13px]">
-                      <Sparkles className="w-4 h-4 text-[#9333ea] shrink-0" />
-                      <span>Rekomendasi analisis AI</span>
-                    </div>
-                    <p className="font-inter text-[12.5px] sm:text-[13px] text-[#581c87] dark:text-purple-200 leading-relaxed">
-                      {calcResult.rekomendasiAI}
-                    </p>
-                  </div>
+                <div>
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                    Jenis Kelamin
+                  </label>
+                  <CustomSelect
+                    options={[
+                      { value: "L", label: "Laki - Laki" },
+                      { value: "P", label: "Perempuan" },
+                    ]}
+                    value={formData.jenisKelamin}
+                    onChange={(val) =>
+                      setFormData({ ...formData, jenisKelamin: val })
+                    }
+                    placeholder="Pilih jenis kelamin"
+                    containerClassName="w-full flex"
+                    triggerClassName="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between"
+                  />
                 </div>
-              )}
-            </aside>
-          </div>
+
+                <div>
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                    Nama Orang Tua
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Masukkan nama lengkap"
+                    value={formData.namaOrangTua || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        namaOrangTua: e.target.value,
+                      })
+                    }
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Berat Badan & Tinggi Badan */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                    Berat Badan (kg)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Masukan Berat Badan"
+                    value={formData.beratBadan}
+                    onChange={(e) =>
+                      setFormData({ ...formData, beratBadan: e.target.value })
+                    }
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                    Tinggi Badan (cm)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Masukan Tinggi Badan"
+                    value={formData.tinggiBadan}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tinggiBadan: e.target.value,
+                      })
+                    }
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="w-full py-4 bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#072a1a] text-white font-inter text-[15.5px] font-medium rounded-[8px] transition-colors shadow-xs cursor-pointer mt-4"
+              >
+                Tambah data balita
+              </button>
+            </form>
+          </section>
         </main>
       </div>
     </div>

@@ -79,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       className={`relative ${
         collapsed && !isMobile ? "w-[80px]" : "w-[290px]"
-      } h-full bg-white dark:bg-[#161920] border-r border-[#e6e8eb] dark:border-[#262a34] flex flex-col justify-between p-4 shrink-0 transition-[width] duration-300 ease-in-out select-none z-30 overflow-visible`}
+      } h-full bg-white dark:bg-[#161920] border-r border-gray-200/70 dark:border-zinc-800/70 flex flex-col justify-between p-0 shrink-0 transition-[width] duration-300 ease-in-out select-none z-30 overflow-visible`}
     >
       {/* Tombol Bulat Melayang di TENGAH VERTIKAL Garis Sidebar (w-8 h-8 -right-4) */}
       {!isMobile && (
@@ -100,8 +100,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Top Header & Navigation */}
       <div className="w-full">
-        {/* Brand Header */}
-        <div className="flex items-center justify-between px-1 pb-5 pt-1 border-b border-gray-100 dark:border-zinc-800/80 mb-5">
+        {/* Brand Header (Tinggi h-[66px] Sejajar Sempurna dengan Topbar h-[66px]) */}
+        <div className="h-[66px] px-4 flex items-center justify-between border-b border-gray-200/70 dark:border-zinc-800/70 shrink-0">
           {/* Logo & Brand Name */}
           <div className="flex items-center gap-2.5">
             <div className="w-[36px] h-[36px] rounded-xl bg-[#0d472c] flex items-center justify-center text-white shadow-xs shrink-0">
@@ -130,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Nav Items List */}
-        <nav className="space-y-2 flex flex-col items-start w-full">
+        <nav className="p-4 space-y-2 flex flex-col items-start w-full">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -143,18 +143,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={item.id}
                 onClick={() => handleNavClick(item.id, item.href)}
                 title={collapsed && !isMobile ? item.label : undefined}
-                className={`w-full h-[44px] px-3.5 rounded-xl flex items-center transition-colors text-left cursor-pointer ${
+                className={`w-full h-[46px] px-3.5 rounded-xl flex items-center transition-all duration-200 group cursor-pointer text-left ${
                   isActive
-                    ? "bg-[#eef3ed] dark:bg-[#1b2720] text-[#0d472c] dark:text-emerald-300 font-semibold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-[#f4f6f3] dark:hover:bg-[#1e222d] hover:text-zinc-900 dark:hover:text-zinc-200 font-medium"
+                    ? "bg-[#eaf5ec] dark:bg-[#1b2720] text-[#0d472c] dark:text-emerald-300 font-semibold"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200 font-medium"
                 }`}
               >
                 <div className="w-[20px] h-[20px] flex items-center justify-center shrink-0">
                   <Icon
-                    className={`w-[19px] h-[19px] stroke-[1.8] ${
+                    className={`w-[19px] h-[19px] transition-colors stroke-[1.8] ${
                       isActive
-                        ? "text-[#0d472c] dark:text-emerald-300"
-                        : "text-zinc-500 dark:text-zinc-400"
+                        ? "text-[#0d472c] dark:text-emerald-300 stroke-[2.2]"
+                        : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
                     }`}
                   />
                 </div>
@@ -174,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Logout Button (Center Aligned) */}
-      <div className="flex justify-center w-full pb-2">
+      <div className="flex justify-center w-full p-4 pb-4">
         <button
           type="button"
           onClick={handleLogout}

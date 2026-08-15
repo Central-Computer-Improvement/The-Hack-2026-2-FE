@@ -26,8 +26,7 @@ export async function GET(request: NextRequest) {
       stunting: 1,
       "gizi buruk": 2,
       "gizi kurang": 3,
-      obesitas: 4,
-      normal: 5,
+      normal: 4,
     };
 
     filteredData = [...filteredData].sort((a, b) => {

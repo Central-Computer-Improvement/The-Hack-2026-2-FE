@@ -15,6 +15,7 @@ import {
   Eye,
   Trash2,
   Filter,
+  Sparkles,
 } from "lucide-react";
 
 import { dataAnak, AnakRecord } from "@/lib/data-anak";
@@ -99,8 +100,12 @@ export default function RekapDataGiziPage() {
   );
 
   /* Page Jump Input states */
-  const [pageInputLaptop, setPageInputLaptop] = useState(String(validPageLaptop));
-  const [pageInputMonitor, setPageInputMonitor] = useState(String(validPageMonitor));
+  const [pageInputLaptop, setPageInputLaptop] = useState(
+    String(validPageLaptop),
+  );
+  const [pageInputMonitor, setPageInputMonitor] = useState(
+    String(validPageMonitor),
+  );
 
   useEffect(() => {
     setPageInputLaptop(String(validPageLaptop));
@@ -133,12 +138,13 @@ export default function RekapDataGiziPage() {
         return "bg-[#eaf5ec] dark:bg-emerald-950/40 text-[#0d472c] dark:text-emerald-300 font-medium";
 
       case "Gizi Kurang":
-        return "bg-[#FFF8DD] dark:bg-amber-950/40 text-[#B4540A] dark:text-amber-300 font-medium";
+        return "bg-[#fef6dc] dark:bg-[#332b00] text-[#b45309] dark:text-[#fde047] font-medium";
 
       case "Gizi Buruk":
+        return "bg-[#fff0eb] dark:bg-[#3a1d17] text-[#c2410c] dark:text-[#FFA382] font-medium";
+
       case "Stunting":
-      case "Obesitas":
-        return "bg-[#FDEAEA] dark:bg-rose-950/40 text-[#B91C1C] dark:text-rose-300 font-medium";
+        return "bg-[#fde8e8] dark:bg-[#3b1212] text-[#a81a1a] dark:text-[#f87171] font-medium";
 
       default:
         return "bg-gray-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium";
@@ -166,10 +172,6 @@ export default function RekapDataGiziPage() {
       value: "Stunting",
       label: "Stunting",
     },
-    {
-      value: "Obesitas",
-      label: "Obesitas",
-    },
   ];
 
   /* Row render helper with explicit height */
@@ -196,7 +198,7 @@ export default function RekapDataGiziPage() {
 
       <td className="py-3 px-4">
         <span
-          className={`px-3 py-1.5 rounded-lg text-[12.5px] inline-block ${getBadgeStyle(
+          className={`px-2.5 py-1 rounded-[6px] text-[12px] font-medium inline-block ${getBadgeStyle(
             child.statusGizi,
           )}`}
         >
@@ -232,7 +234,7 @@ export default function RekapDataGiziPage() {
   );
 
   return (
-    <div className="flex flex-col xl:flex-row min-h-screen xl:h-screen xl:overflow-hidden bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter select-none">
+    <div className="flex flex-col lg:flex-row min-h-screen xl:h-screen xl:overflow-hidden bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter select-none">
       {/* sidebar */}
       <Sidebar
         currentTab="rekap-data-gizi"
@@ -261,10 +263,10 @@ export default function RekapDataGiziPage() {
               <button
                 type="button"
                 onClick={() => setShowWhoRules(true)}
-                className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 hover:bg-emerald-100 dark:hover:bg-[#22352b] text-[#0d472c] dark:text-emerald-300 text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 text-[#0d472c] dark:text-emerald-300 text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Book className="w-[18px] h-[18px]" />
-                <span>Rumusan &amp; Aturan WHO</span>
+                <span>Rumus & Aturan WHO</span>
               </button>
 
               <button
@@ -409,8 +411,8 @@ export default function RekapDataGiziPage() {
                   ========================================= */}
               <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(max-height:849px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
                 <div>
-                  Halaman {validPageLaptop} dari {totalPagesLaptop} ({filteredData.length}{" "}
-                  balita)
+                  Halaman {validPageLaptop} dari {totalPagesLaptop} (
+                  {filteredData.length} balita)
                 </div>
 
                 {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
@@ -445,10 +447,15 @@ export default function RekapDataGiziPage() {
                       }
                     }}
                     onBlur={() => {
-                      if (!pageInputLaptop || parseInt(pageInputLaptop, 10) < 1) {
+                      if (
+                        !pageInputLaptop ||
+                        parseInt(pageInputLaptop, 10) < 1
+                      ) {
                         setCurrentPage(1);
                         setPageInputLaptop("1");
-                      } else if (parseInt(pageInputLaptop, 10) > totalPagesLaptop) {
+                      } else if (
+                        parseInt(pageInputLaptop, 10) > totalPagesLaptop
+                      ) {
                         setCurrentPage(totalPagesLaptop);
                         setPageInputLaptop(String(totalPagesLaptop));
                       }
@@ -468,7 +475,9 @@ export default function RekapDataGiziPage() {
                     type="button"
                     disabled={validPageLaptop >= totalPagesLaptop}
                     onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPagesLaptop))
+                      setCurrentPage((prev) =>
+                        Math.min(prev + 1, totalPagesLaptop),
+                      )
                     }
                     className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
                     aria-label="Halaman berikutnya"
@@ -484,8 +493,8 @@ export default function RekapDataGiziPage() {
                   ========================================= */}
               <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(min-height:850px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
                 <div>
-                  Halaman {validPageMonitor} dari {totalPagesMonitor} ({filteredData.length}{" "}
-                  balita)
+                  Halaman {validPageMonitor} dari {totalPagesMonitor} (
+                  {filteredData.length} balita)
                 </div>
 
                 {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
@@ -520,10 +529,15 @@ export default function RekapDataGiziPage() {
                       }
                     }}
                     onBlur={() => {
-                      if (!pageInputMonitor || parseInt(pageInputMonitor, 10) < 1) {
+                      if (
+                        !pageInputMonitor ||
+                        parseInt(pageInputMonitor, 10) < 1
+                      ) {
                         setCurrentPage(1);
                         setPageInputMonitor("1");
-                      } else if (parseInt(pageInputMonitor, 10) > totalPagesMonitor) {
+                      } else if (
+                        parseInt(pageInputMonitor, 10) > totalPagesMonitor
+                      ) {
                         setCurrentPage(totalPagesMonitor);
                         setPageInputMonitor(String(totalPagesMonitor));
                       }
@@ -543,7 +557,9 @@ export default function RekapDataGiziPage() {
                     type="button"
                     disabled={validPageMonitor >= totalPagesMonitor}
                     onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPagesMonitor))
+                      setCurrentPage((prev) =>
+                        Math.min(prev + 1, totalPagesMonitor),
+                      )
                     }
                     className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
                     aria-label="Halaman berikutnya"
@@ -557,62 +573,86 @@ export default function RekapDataGiziPage() {
         </main>
       </div>
 
-      {/* detail modal */}
+      {/* Detail Anak Modal */}
       {selectedChild && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setSelectedChild(null)}
         >
           <div
-            className="bg-white dark:bg-[#161920] rounded-2xl max-w-[480px] w-full p-6 shadow-2xl font-inter"
+            className="bg-white dark:bg-[#161920] rounded-[24px] max-w-[480px] w-full p-6 shadow-2xl font-inter select-none animate-in zoom-in-95 border border-gray-100 dark:border-zinc-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-[17px] font-bold mb-4">Detail Anak</h3>
+            <h3 className="text-[18px] font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+              Detail Anak
+            </h3>
 
-            <div className="border border-gray-100 dark:border-zinc-800 rounded-xl p-4 mb-5 space-y-2.5 text-[13px]">
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Nama Lengkap:</span>
-                <span className="font-medium">{selectedChild.nama}</span>
+            {/* Child Info Box */}
+            <div className="border border-gray-200/70 dark:border-zinc-800 rounded-2xl p-4.5 mb-5 space-y-3 text-[13.5px] bg-white dark:bg-[#1e222d]/40">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Nama Lengkap:</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">{selectedChild.nama}</span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Umur:</span>
-                <span className="font-medium">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Umur:</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
                   {selectedChild.usiaBulan} Bulan
                 </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-zinc-500">BB/TB:</span>
-                <span className="font-medium">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">BB/TB:</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
                   {selectedChild.beratBadan} kg / {selectedChild.tinggiBadan} cm
                 </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Z Score TB/U:</span>
-                <span className="font-medium">{selectedChild.zScoreTBU}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Status</span>
+                <span className={`px-2.5 py-0.5 rounded-[6px] text-[12px] font-medium ${
+                  selectedChild.statusGizi === "Normal"
+                    ? "bg-[#eaf5ec] text-[#0d472c] dark:bg-emerald-950/40 dark:text-emerald-300"
+                    : selectedChild.statusGizi === "Gizi Kurang"
+                    ? "bg-[#fef6dc] text-[#b45309] dark:bg-[#332b00] dark:text-[#fde047]"
+                    : selectedChild.statusGizi === "Gizi Buruk"
+                    ? "bg-[#fff0eb] text-[#c2410c] dark:bg-[#3a1d17] dark:text-[#FFA382]"
+                    : "bg-[#fde8e8] text-[#a81a1a] dark:bg-[#3b1212] dark:text-[#f87171]"
+                }`}>
+                  {selectedChild.statusGizi}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Z Score TB/U</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {selectedChild.zScoreTBU.includes("SD") ? selectedChild.zScoreTBU : `${selectedChild.zScoreTBU} SD`}
+                </span>
               </div>
             </div>
 
-            <h3 className="text-[15px] font-bold mb-3">
+            {/* Subheader */}
+            <h4 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 mb-3">
               Matriks Penilaian Status Gizi WHO &amp; Risk Level
-            </h3>
+            </h4>
 
-            <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 text-[13px] mb-5">
-              <div className="font-bold text-purple-600 dark:text-purple-400 mb-2">
-                ✨ Rekomendasi analisis AI
+            {/* Fixed Purple AI Box */}
+            <div className="p-4.5 rounded-2xl bg-[#faf5ff] dark:bg-[#1a1424] border border-[#f3e8ff] dark:border-[#382654] text-[13px] mb-5 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-[#7e22ce] dark:text-[#c084fc] text-[14px]">
+                <Sparkles className="w-4 h-4 text-[#7e22ce] dark:text-[#c084fc] stroke-[2.2]" />
+                <span>Rekomendasi analisis AI</span>
               </div>
 
-              <p className="font-medium text-purple-700 dark:text-purple-300 leading-relaxed whitespace-pre-line">
+              <p className="text-[#6b21a8] dark:text-[#d8b4fe] leading-relaxed whitespace-pre-line font-normal text-[12.5px] sm:text-[13px]">
                 {selectedChild.rekomendasiAI}
               </p>
             </div>
 
+            {/* Back Button */}
             <button
               type="button"
               onClick={() => setSelectedChild(null)}
-              className="w-full py-3 bg-[#0d472c] hover:bg-[#0a3923] text-white rounded-lg text-[14px] font-medium cursor-pointer"
+              className="w-full py-3.5 bg-[#0d472c] hover:bg-[#0a3923] text-white rounded-xl text-[14.5px] font-medium cursor-pointer transition-colors"
             >
               Kembali
             </button>

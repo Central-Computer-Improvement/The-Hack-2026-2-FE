@@ -10,7 +10,7 @@ export interface AnakRecord {
   zScoreTBU: string;
   zScoreBBU: string;
   zScoreBBTB: string;
-  statusGizi: "Normal" | "Gizi Kurang" | "Gizi Buruk" | "Stunting" | "Obesitas";
+  statusGizi: "Normal" | "Gizi Kurang" | "Gizi Buruk" | "Stunting";
   rekomendasiAI: string;
   tanggalPeriksa: string;
 }
@@ -110,12 +110,12 @@ export const dataAnak: AnakRecord[] = [
     namaOrangTua: "Abdullah Mansur",
     beratBadan: 13.2,
     tinggiBadan: 79.5,
-    zScoreTBU: "+3.2 SD",
-    zScoreBBU: "+3.1 SD",
-    zScoreBBTB: "+2.8 SD",
-    statusGizi: "Obesitas",
+    zScoreTBU: "+0.8 SD",
+    zScoreBBU: "+0.9 SD",
+    zScoreBBTB: "+0.7 SD",
+    statusGizi: "Normal",
     rekomendasiAI:
-      "[ANALISIS MEDIS KEMENKES RI & WHO] Konsultasikan penataan pola makan balita.",
+      "[ANALISIS MEDIS KEMENKES RI & WHO] Pertumbuhan optimal. Pertahankan pola makan gizi seimbang.",
     tanggalPeriksa: "2026-08-07",
   },
   {
@@ -436,11 +436,11 @@ export const dataAnak: AnakRecord[] = [
     namaOrangTua: "Andi Saputra",
     beratBadan: 15.5,
     tinggiBadan: 96.0,
-    zScoreTBU: "+3.0 SD",
-    zScoreBBU: "+2.9 SD",
-    zScoreBBTB: "+2.5 SD",
-    statusGizi: "Obesitas",
-    rekomendasiAI: "[ANALISIS MEDIS KEMENKES RI & WHO] Atur pola makan. Kurangi makanan tinggi gula dan lemak.",
+    zScoreTBU: "+0.5 SD",
+    zScoreBBU: "+0.6 SD",
+    zScoreBBTB: "+0.4 SD",
+    statusGizi: "Normal",
+    rekomendasiAI: "[ANALISIS MEDIS KEMENKES RI & WHO] Pertumbuhan optimal. Pertahankan pola asuh dan nutrisi.",
     tanggalPeriksa: "2026-07-18",
   },
   {
@@ -548,11 +548,11 @@ export const dataAnak: AnakRecord[] = [
     namaOrangTua: "Yusuf Anindya",
     beratBadan: 12.8,
     tinggiBadan: 80.0,
-    zScoreTBU: "+3.1 SD",
-    zScoreBBU: "+3.0 SD",
-    zScoreBBTB: "+2.7 SD",
-    statusGizi: "Obesitas",
-    rekomendasiAI: "[ANALISIS MEDIS KEMENKES RI & WHO] Konsultasikan pola makan. Batasi asupan gula.",
+    zScoreTBU: "+0.2 SD",
+    zScoreBBU: "+0.3 SD",
+    zScoreBBTB: "+0.2 SD",
+    statusGizi: "Normal",
+    rekomendasiAI: "[ANALISIS MEDIS KEMENKES RI & WHO] Pertumbuhan sesuai kurva standar WHO. Lanjutkan ASI dan MPASI bergizi.",
     tanggalPeriksa: "2026-07-11",
   },
   {
@@ -804,11 +804,11 @@ export const dataAnak: AnakRecord[] = [
     namaOrangTua: "Maulidan Hasan",
     beratBadan: 16.0,
     tinggiBadan: 90.0,
-    zScoreTBU: "+3.2 SD",
-    zScoreBBU: "+3.1 SD",
-    zScoreBBTB: "+2.8 SD",
-    statusGizi: "Obesitas",
-    rekomendasiAI: "[ANALISIS MEDIS KEMENKES RI & WHO] Perlu pengaturan diet dan aktivitas fisik.",
+    zScoreTBU: "+0.6 SD",
+    zScoreBBU: "+0.7 SD",
+    zScoreBBTB: "+0.5 SD",
+    statusGizi: "Normal",
+    rekomendasiAI: "[ANALISIS MEDIS KEMENKES RI & WHO] Status gizi optimal. Pertahankan pola hidup sehat dan aktif.",
     tanggalPeriksa: "2026-06-25",
   },
   {

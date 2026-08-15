@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, X, Sparkles } from "lucide-react";
 import { dataAnak } from "@/lib/data-anak";
 
 interface ChildAlert {
@@ -15,6 +15,7 @@ interface ChildAlert {
   height: string;
   weight: string;
   lastCheck: string;
+  rekomendasiAI: string;
 }
 
 const formatIndonesianDate = (dateString: string) => {
@@ -35,13 +36,14 @@ export const StuntingAlerts: React.FC = () => {
       id: anak.id,
       initial: anak.nama.charAt(0).toUpperCase(),
       name: anak.nama,
-      age: `${anak.usiaBulan} bln`,
+      age: `${anak.usiaBulan} Bulan`,
       gender: anak.jenisKelamin === "L" ? "Laki - Laki" : "Perempuan",
       status: anak.statusGizi,
-      zScore: anak.zScoreTBU,
+      zScore: anak.zScoreTBU.includes("SD") ? anak.zScoreTBU : `${anak.zScoreTBU} SD`,
       height: `${anak.tinggiBadan} cm`,
       weight: `${anak.beratBadan} kg`,
       lastCheck: formatIndonesianDate(anak.tanggalPeriksa),
+      rekomendasiAI: anak.rekomendasiAI,
     }));
 
   return (
@@ -73,109 +75,128 @@ export const StuntingAlerts: React.FC = () => {
                 {/* Status Badge */}
                 <div className="mb-0.5">
                   {item.status === "Stunting" ? (
-                    <span className="inline-block bg-[#fdeaea] dark:bg-rose-950/60 text-[#b91c1c] dark:text-rose-300 font-inter text-[10.5px] sm:text-[11px] font-medium px-2 py-0.5 rounded-md">
+                    <span className="font-inter text-[11px] font-medium px-2 py-0.5 rounded-[6px] bg-[#fde8e8] text-[#a81a1a] dark:bg-[#3b1212] dark:text-[#f87171] inline-block">
                       Stunting
                     </span>
+                  ) : item.status === "Gizi Buruk" ? (
+                    <span className="font-inter text-[11px] font-medium px-2 py-0.5 rounded-[6px] bg-[#fff0eb] text-[#c2410c] dark:bg-[#3a1d17] dark:text-[#FFA382] inline-block">
+                      Gizi Buruk
+                    </span>
                   ) : (
-                    <span className="inline-block bg-[#fff8dd] dark:bg-amber-950/60 text-[#b4540a] dark:text-amber-300 font-inter text-[10.5px] sm:text-[11px] font-medium px-2 py-0.5 rounded-md">
+                    <span className="font-inter text-[11px] font-medium px-2 py-0.5 rounded-[6px] bg-[#fef6dc] text-[#b45309] dark:bg-[#332b00] dark:text-[#fde047] inline-block">
                       Gizi Kurang
                     </span>
                   )}
                 </div>
 
-                <span className="font-inter text-[13.5px] sm:text-[15px] font-bold text-zinc-900 dark:text-zinc-100 leading-tight truncate">
+                {/* Name */}
+                <span className="font-inter text-[13px] sm:text-[14.5px] font-bold text-zinc-900 dark:text-zinc-100 truncate">
                   {item.name}
                 </span>
-                <span className="font-inter text-[11px] sm:text-[12px] text-zinc-400 dark:text-zinc-500 mt-0.5 truncate">
-                  {item.age}, {item.gender}
+
+                {/* Meta details */}
+                <span className="font-inter text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+                  {item.age} · {item.gender}
                 </span>
               </div>
             </div>
 
-            {/* Right: Detail Button */}
+            {/* Action button */}
             <button
               type="button"
               onClick={() => setSelectedChild(item)}
-              className="px-2.5 sm:px-3.5 py-1.5 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-xl font-inter text-[12px] sm:text-[13px] font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+              className="p-1.5 sm:p-2 rounded-xl text-[#0d472c] dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors shrink-0 cursor-pointer"
+              title="Lihat Detail Anak"
+              aria-label="Lihat Detail Anak"
             >
-              <span>Detail</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-5 h-5 stroke-[2]" />
             </button>
           </div>
         ))}
       </div>
 
-      {/* Detail Modal */}
+      {/* Detail Anak Modal (Aligned Design) */}
       {selectedChild && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setSelectedChild(null)}
         >
           <div
-            className="bg-white dark:bg-[#161920] border border-gray-100 dark:border-zinc-800 rounded-2xl max-w-[480px] w-full p-6 shadow-2xl font-inter relative"
+            className="bg-white dark:bg-[#161920] border border-gray-100 dark:border-zinc-800 rounded-[24px] max-w-[480px] w-full p-6 shadow-2xl font-inter select-none animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => setSelectedChild(null)}
-              className="absolute top-5 right-5 p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-[17px] font-bold mb-4 text-zinc-900 dark:text-zinc-100">
-              Detail Peringatan Dini
+            <h3 className="text-[18px] font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+              Detail Anak
             </h3>
 
-            <div className="border border-gray-100 dark:border-zinc-800 rounded-xl p-4 mb-5 space-y-2.5 text-[13px] bg-[#f8f9fa] dark:bg-[#1e222d]">
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Nama Balita:</span>
-                <span className="font-bold text-zinc-900 dark:text-zinc-100">{selectedChild.name}</span>
+            {/* Child Info Box */}
+            <div className="border border-gray-200/70 dark:border-zinc-800 rounded-2xl p-4.5 mb-5 space-y-3 text-[13.5px] bg-white dark:bg-[#1e222d]/40">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Nama Lengkap:</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">{selectedChild.name}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Usia &amp; Gender:</span>
-                <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                  {selectedChild.age}, {selectedChild.gender}
+
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Umur:</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {selectedChild.age}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Tinggi &amp; Berat:</span>
-                <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                  {selectedChild.height} / {selectedChild.weight}
+
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">BB/TB:</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {selectedChild.weight} / {selectedChild.height}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Status Gizi:</span>
-                <span className={`font-bold ${selectedChild.status === "Stunting" ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400"}`}>
+
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Status</span>
+                <span className={`px-2.5 py-0.5 rounded-[6px] text-[12px] font-medium ${
+                  selectedChild.status === "Normal"
+                    ? "bg-[#eaf5ec] text-[#0d472c] dark:bg-emerald-950/40 dark:text-emerald-300"
+                    : selectedChild.status === "Gizi Kurang"
+                    ? "bg-[#fef6dc] text-[#b45309] dark:bg-[#332b00] dark:text-[#fde047]"
+                    : selectedChild.status === "Gizi Buruk"
+                    ? "bg-[#fff0eb] text-[#c2410c] dark:bg-[#3a1d17] dark:text-[#FFA382]"
+                    : "bg-[#fde8e8] text-[#a81a1a] dark:bg-[#3b1212] dark:text-[#f87171]"
+                }`}>
                   {selectedChild.status}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Z-Score TB/U:</span>
-                <span className="font-bold text-zinc-900 dark:text-zinc-100">{selectedChild.zScore}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Pemeriksaan Terakhir:</span>
-                <span className="font-medium text-zinc-800 dark:text-zinc-200">{selectedChild.lastCheck}</span>
+
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 dark:text-zinc-400">Z Score TB/U</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {selectedChild.zScore}
+                </span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-[13px] mb-5">
-              <div className="font-bold text-amber-800 dark:text-amber-300 mb-1">
-                ⚠️ Rekomendasi Tindakan Cepat
+            {/* Subheader */}
+            <h4 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 mb-3">
+              Matriks Penilaian Status Gizi WHO &amp; Risk Level
+            </h4>
+
+            {/* Fixed Purple AI Box */}
+            <div className="p-4.5 rounded-2xl bg-[#faf5ff] dark:bg-[#1a1424] border border-[#f3e8ff] dark:border-[#382654] text-[13px] mb-5 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-[#7e22ce] dark:text-[#c084fc] text-[14px]">
+                <Sparkles className="w-4 h-4 text-[#7e22ce] dark:text-[#c084fc] stroke-[2.2]" />
+                <span>Rekomendasi analisis AI</span>
               </div>
-              <p className="font-medium text-amber-900 dark:text-amber-200 leading-relaxed">
-                Prioritaskan balita ini untuk pemberian makanan tambahan (PMT) kaya protein hewani dan jadwalkan konseling gizi intensif dengan tenaga medis Posyandu.
+
+              <p className="text-[#6b21a8] dark:text-[#d8b4fe] leading-relaxed whitespace-pre-line font-normal text-[12.5px] sm:text-[13px]">
+                {selectedChild.rekomendasiAI}
               </p>
             </div>
 
+            {/* Back Button */}
             <button
               type="button"
               onClick={() => setSelectedChild(null)}
-              className="w-full py-2.5 bg-[#0d472c] hover:bg-[#0a3923] text-white rounded-xl text-[14px] font-medium cursor-pointer"
+              className="w-full py-3.5 bg-[#0d472c] hover:bg-[#0a3923] text-white rounded-xl text-[14.5px] font-medium cursor-pointer transition-colors"
             >
-              Tutup
+              Kembali
             </button>
           </div>
         </div>

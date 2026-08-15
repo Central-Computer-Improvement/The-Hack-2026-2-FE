@@ -16,14 +16,26 @@ export const LoginForm: React.FC = () => {
     e.preventDefault();
     let hasError = false;
 
-    if (!username.trim()) {
+    const validUsernames = ["bidan_sri", "bidan_sri_wahyuni", "admin"];
+    const validPasswords = ["simgizi2026", "posyandu123"];
+
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (!cleanUsername) {
       setUsernameError("Username wajib diisi");
+      hasError = true;
+    } else if (!validUsernames.includes(cleanUsername)) {
+      setUsernameError("Username salah");
       hasError = true;
     } else {
       setUsernameError(null);
     }
 
-    if (!password.trim() || password.length < 6) {
+    if (!cleanPassword) {
+      setPasswordError("Password wajib diisi");
+      hasError = true;
+    } else if (!validPasswords.includes(cleanPassword)) {
       setPasswordError("Password salah");
       hasError = true;
     } else {

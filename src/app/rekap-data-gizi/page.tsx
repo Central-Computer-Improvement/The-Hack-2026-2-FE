@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/layouts/Sidebar";
 import Topbar from "@/components/layouts/Topbar";
 import WhoRulesModal from "@/components/_shared/WhoRulesModal";
 import CustomSelect from "@/components/forms/CustomSelect";
+import { showToast } from "@/lib/custom-toast";
 
 import {
   Book,
@@ -18,9 +19,16 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { dataAnak, AnakRecord } from "@/lib/data-anak";
+import { AnakRecord } from "@/lib/data-anak";
+import { useDataAnak, deleteDataAnak } from "@/lib/data-anak-store";
+import { useHasMounted } from "@/hooks/useHasMounted";
+import {
+  SkeletonTableBody,
+  SkeletonTableFooter,
+} from "@/components/_shared/skeletons";
 
 export default function RekapDataGiziPage() {
+  const hasMounted = useHasMounted();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showWhoRules, setShowWhoRules] = useState(false);
 
@@ -30,25 +38,45 @@ export default function RekapDataGiziPage() {
 
   const [selectedChild, setSelectedChild] = useState<AnakRecord | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AnakRecord | null>(null);
-  const [notification, setNotification] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  const [allChildren, setAllChildren] = useState<AnakRecord[]>(dataAnak);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Global Ctrl + F / Cmd + F Shortcut for Quick Search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Centralized Reactive Store (Persisted to localStorage)
+  const allChildren = useDataAnak();
 
   /* export */
   const handleExportPdf = async () => {
     try {
       setIsExporting(true);
 
-      const filterParam =
-        statusFilter && statusFilter !== "Semua Kategori"
-          ? `?filter=${encodeURIComponent(statusFilter)}`
-          : "";
-
-      const res = await fetch(`/api/export-pdf${filterParam}`);
+      const res = await fetch("/api/export-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: allChildren,
+          filter: statusFilter !== "Semua Kategori" ? statusFilter : "",
+        }),
+      });
 
       if (!res.ok) {
-        throw new Error("Gagal memuat PDF");
+        throw new Error("Gagal memuat dokumen PDF");
       }
 
       const blob = await res.blob();
@@ -57,9 +85,10 @@ export default function RekapDataGiziPage() {
 
       setTimeout(() => {
         URL.revokeObjectURL(url);
-      }, 1000);
-    } catch {
-      alert("Gagal membuka dokumen PDF.");
+      }, 2000);
+    } catch (err) {
+      console.error("Export PDF error:", err);
+      showToast.error("Gagal membuka dokumen PDF.");
     } finally {
       setIsExporting(false);
     }
@@ -119,16 +148,9 @@ export default function RekapDataGiziPage() {
   const handleDelete = () => {
     if (!deleteTarget) return;
 
-    setAllChildren((prev) =>
-      prev.filter((item) => item.id !== deleteTarget.id),
-    );
-
-    setNotification(`Data balita ${deleteTarget.nama} berhasil dihapus.`);
+    deleteDataAnak(deleteTarget.id);
+    showToast.delete(`Data balita ${deleteTarget.nama} berhasil dihapus`);
     setDeleteTarget(null);
-
-    setTimeout(() => {
-      setNotification(null);
-    }, 4000);
   };
 
   /* badge */
@@ -252,7 +274,7 @@ export default function RekapDataGiziPage() {
         />
 
         {/* content */}
-        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-5 w-full flex-1 xl:min-h-0 xl:overflow-hidden">
+        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1 xl:min-h-0 xl:overflow-hidden">
           {/* header */}
           <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight">
@@ -285,13 +307,6 @@ export default function RekapDataGiziPage() {
             </div>
           </div>
 
-          {/* notification */}
-          {notification && (
-            <div className="shrink-0 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900 text-[#0d472c] dark:text-emerald-300 text-[13.5px] font-semibold">
-              {notification}
-            </div>
-          )}
-
           {/* card */}
           <section className="bg-white dark:bg-[#161920] border border-[#e6e8eb] dark:border-[#262a34] rounded-[24px] p-5 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-5">
             {/* title */}
@@ -309,6 +324,7 @@ export default function RekapDataGiziPage() {
               <div className="relative w-full sm:flex-1 h-[42px]">
                 <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Search"
                   value={searchQuery}
@@ -339,7 +355,7 @@ export default function RekapDataGiziPage() {
 
             {/* table container */}
             <div className="w-full border border-gray-100 dark:border-zinc-800/80 rounded-2xl overflow-hidden bg-white dark:bg-[#161920]">
-              <div className="w-full overflow-x-auto">
+              <div className="w-full overflow-x-auto overflow-y-hidden">
                 <table className="w-full min-w-[900px] text-left text-[13.5px] border-collapse">
                   <thead>
                     <tr className="bg-[#f8f9fa] dark:bg-[#1e222d] border-b border-gray-200/80 dark:border-zinc-800 font-bold text-[13px] h-[48px]">
@@ -368,206 +384,214 @@ export default function RekapDataGiziPage() {
                   </thead>
 
                   {/* ========================================================
-                      TBODY LAPTOP (< 850px height) — Murni 3 data per halaman
+                      TBODY WITH SKELETON LOADING GUARD
                       ======================================================== */}
-                  <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60 hidden [@media(max-height:849px)]:table-row-group">
-                    {currentItemsLaptop.length > 0 ? (
-                      currentItemsLaptop.map(renderRow)
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="py-12 text-center text-zinc-400 font-medium"
-                        >
-                          Belum ada data balita.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+                  {!hasMounted ? (
+                    <SkeletonTableBody />
+                  ) : (
+                    <>
+                      {/* TBODY LAPTOP (< 850px height) — Murni 3 data per halaman */}
+                      <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60 hidden [@media(max-height:849px)]:table-row-group animate-fade-in">
+                        {currentItemsLaptop.length > 0 ? (
+                          currentItemsLaptop.map(renderRow)
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan={7}
+                              className="py-12 text-center text-zinc-400 font-medium"
+                            >
+                              Belum ada data balita.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
 
-                  {/* ========================================================
-                      TBODY MONITOR (>= 850px height) — Murni 8 data per halaman
-                      ======================================================== */}
-                  <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60 hidden [@media(min-height:850px)]:table-row-group">
-                    {currentItemsMonitor.length > 0 ? (
-                      currentItemsMonitor.map(renderRow)
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="py-12 text-center text-zinc-400 font-medium"
-                        >
-                          Belum ada data balita.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+                      {/* TBODY MONITOR (>= 850px height) — Murni 8 data per halaman */}
+                      <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60 hidden [@media(min-height:850px)]:table-row-group animate-fade-in">
+                        {currentItemsMonitor.length > 0 ? (
+                          currentItemsMonitor.map(renderRow)
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan={7}
+                              className="py-12 text-center text-zinc-400 font-medium"
+                            >
+                              Belum ada data balita.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </>
+                  )}
                 </table>
               </div>
 
               {/* =========================================
-                  PAGINATION FOOTER (LAPTOP: < 850px)
-                  Rendered instantly at 0ms via CSS Media Query
+                  PAGINATION FOOTER WITH SKELETON GUARD
                   ========================================= */}
-              <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(max-height:849px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
-                <div>
-                  Halaman {validPageLaptop} dari {totalPagesLaptop} (
-                  {filteredData.length} balita)
-                </div>
+              {!hasMounted ? (
+                <SkeletonTableFooter />
+              ) : (
+                <>
+                  {/* PAGINATION FOOTER (LAPTOP: < 850px) */}
+                  <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(max-height:849px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
+                    <div>
+                      Halaman {validPageLaptop} dari {totalPagesLaptop} (
+                      {filteredData.length} balita)
+                    </div>
 
-                {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
-                <div className="inline-flex items-center rounded-lg bg-[#f0f2f5] dark:bg-[#1f242d] border border-gray-200/90 dark:border-zinc-700/80 p-0.5 shadow-2xs">
-                  {/* PREVIOUS BUTTON */}
-                  <button
-                    type="button"
-                    disabled={validPageLaptop <= 1}
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
-                    aria-label="Halaman sebelumnya"
-                  >
-                    <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
-                  </button>
-
-                  {/* ACTIVE PAGE INPUT (CLICK TO TYPE DIRECTLY) */}
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={pageInputLaptop}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, "");
-                      setPageInputLaptop(val);
-                      if (val !== "") {
-                        const num = parseInt(val, 10);
-                        if (num >= 1 && num <= totalPagesLaptop) {
-                          setCurrentPage(num);
+                    {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
+                    <div className="inline-flex items-center rounded-lg bg-[#f0f2f5] dark:bg-[#1f242d] border border-gray-200/90 dark:border-zinc-700/80 p-0.5 shadow-2xs">
+                      {/* PREVIOUS BUTTON */}
+                      <button
+                        type="button"
+                        disabled={validPageLaptop <= 1}
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
                         }
-                      }
-                    }}
-                    onBlur={() => {
-                      if (
-                        !pageInputLaptop ||
-                        parseInt(pageInputLaptop, 10) < 1
-                      ) {
-                        setCurrentPage(1);
-                        setPageInputLaptop("1");
-                      } else if (
-                        parseInt(pageInputLaptop, 10) > totalPagesLaptop
-                      ) {
-                        setCurrentPage(totalPagesLaptop);
-                        setPageInputLaptop(String(totalPagesLaptop));
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        (e.target as HTMLInputElement).blur();
-                      }
-                    }}
-                    className="w-[38px] h-8 text-center bg-white dark:bg-[#161920] text-zinc-900 dark:text-zinc-100 font-bold text-[13px] rounded-[4px] shadow-xs border border-gray-200/60 dark:border-zinc-700/60 focus:outline-none focus:ring-1.5 focus:ring-[#0d472c] dark:focus:ring-emerald-500 cursor-text"
-                    aria-label="Nomor halaman aktif"
-                    title="Ketik nomor halaman dan tekan Enter"
-                  />
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
+                        aria-label="Halaman sebelumnya"
+                      >
+                        <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
+                      </button>
 
-                  {/* NEXT BUTTON */}
-                  <button
-                    type="button"
-                    disabled={validPageLaptop >= totalPagesLaptop}
-                    onClick={() =>
-                      setCurrentPage((prev) =>
-                        Math.min(prev + 1, totalPagesLaptop),
-                      )
-                    }
-                    className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
-                    aria-label="Halaman berikutnya"
-                  >
-                    <ChevronRight className="w-4 h-4 stroke-[2.2]" />
-                  </button>
-                </div>
-              </div>
+                      {/* ACTIVE PAGE INPUT (CLICK TO TYPE DIRECTLY) */}
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={pageInputLaptop}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          setPageInputLaptop(val);
+                          if (val !== "") {
+                            const num = parseInt(val, 10);
+                            if (num >= 1 && num <= totalPagesLaptop) {
+                              setCurrentPage(num);
+                            }
+                          }
+                        }}
+                        onBlur={() => {
+                          if (
+                            !pageInputLaptop ||
+                            parseInt(pageInputLaptop, 10) < 1
+                          ) {
+                            setCurrentPage(1);
+                            setPageInputLaptop("1");
+                          } else if (
+                            parseInt(pageInputLaptop, 10) > totalPagesLaptop
+                          ) {
+                            setCurrentPage(totalPagesLaptop);
+                            setPageInputLaptop(String(totalPagesLaptop));
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            (e.target as HTMLInputElement).blur();
+                          }
+                        }}
+                        className="w-[38px] h-8 text-center bg-white dark:bg-[#161920] text-zinc-900 dark:text-zinc-100 font-bold text-[13px] rounded-[4px] shadow-xs border border-gray-200/60 dark:border-zinc-700/60 focus:outline-none focus:ring-1.5 focus:ring-[#0d472c] dark:focus:ring-emerald-500 cursor-text"
+                        aria-label="Nomor halaman aktif"
+                        title="Ketik nomor halaman dan tekan Enter"
+                      />
 
-              {/* =========================================
-                  PAGINATION FOOTER (MONITOR: >= 850px)
-                  Rendered instantly at 0ms via CSS Media Query
-                  ========================================= */}
-              <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(min-height:850px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
-                <div>
-                  Halaman {validPageMonitor} dari {totalPagesMonitor} (
-                  {filteredData.length} balita)
-                </div>
-
-                {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
-                <div className="inline-flex items-center rounded-lg bg-[#f0f2f5] dark:bg-[#1f242d] border border-gray-200/90 dark:border-zinc-700/80 p-0.5 shadow-2xs">
-                  {/* PREVIOUS BUTTON */}
-                  <button
-                    type="button"
-                    disabled={validPageMonitor <= 1}
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
-                    aria-label="Halaman sebelumnya"
-                  >
-                    <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
-                  </button>
-
-                  {/* ACTIVE PAGE INPUT (CLICK TO TYPE DIRECTLY) */}
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={pageInputMonitor}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, "");
-                      setPageInputMonitor(val);
-                      if (val !== "") {
-                        const num = parseInt(val, 10);
-                        if (num >= 1 && num <= totalPagesMonitor) {
-                          setCurrentPage(num);
+                      {/* NEXT BUTTON */}
+                      <button
+                        type="button"
+                        disabled={validPageLaptop >= totalPagesLaptop}
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPagesLaptop),
+                          )
                         }
-                      }
-                    }}
-                    onBlur={() => {
-                      if (
-                        !pageInputMonitor ||
-                        parseInt(pageInputMonitor, 10) < 1
-                      ) {
-                        setCurrentPage(1);
-                        setPageInputMonitor("1");
-                      } else if (
-                        parseInt(pageInputMonitor, 10) > totalPagesMonitor
-                      ) {
-                        setCurrentPage(totalPagesMonitor);
-                        setPageInputMonitor(String(totalPagesMonitor));
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        (e.target as HTMLInputElement).blur();
-                      }
-                    }}
-                    className="w-[38px] h-8 text-center bg-white dark:bg-[#161920] text-zinc-900 dark:text-zinc-100 font-bold text-[13px] rounded-[4px] shadow-xs border border-gray-200/60 dark:border-zinc-700/60 focus:outline-none focus:ring-1.5 focus:ring-[#0d472c] dark:focus:ring-emerald-500 cursor-text"
-                    aria-label="Nomor halaman aktif"
-                    title="Ketik nomor halaman dan tekan Enter"
-                  />
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
+                        aria-label="Halaman berikutnya"
+                      >
+                        <ChevronRight className="w-4 h-4 stroke-[2.2]" />
+                      </button>
+                    </div>
+                  </div>
 
-                  {/* NEXT BUTTON */}
-                  <button
-                    type="button"
-                    disabled={validPageMonitor >= totalPagesMonitor}
-                    onClick={() =>
-                      setCurrentPage((prev) =>
-                        Math.min(prev + 1, totalPagesMonitor),
-                      )
-                    }
-                    className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
-                    aria-label="Halaman berikutnya"
-                  >
-                    <ChevronRight className="w-4 h-4 stroke-[2.2]" />
-                  </button>
-                </div>
-              </div>
+                  {/* PAGINATION FOOTER (MONITOR: >= 850px) */}
+                  <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(min-height:850px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
+                    <div>
+                      Halaman {validPageMonitor} dari {totalPagesMonitor} (
+                      {filteredData.length} balita)
+                    </div>
+
+                    {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
+                    <div className="inline-flex items-center rounded-lg bg-[#f0f2f5] dark:bg-[#1f242d] border border-gray-200/90 dark:border-zinc-700/80 p-0.5 shadow-2xs">
+                      {/* PREVIOUS BUTTON */}
+                      <button
+                        type="button"
+                        disabled={validPageMonitor <= 1}
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
+                        aria-label="Halaman sebelumnya"
+                      >
+                        <ChevronLeft className="w-4 h-4 stroke-[2.2]" />
+                      </button>
+
+                      {/* ACTIVE PAGE INPUT (CLICK TO TYPE DIRECTLY) */}
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={pageInputMonitor}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          setPageInputMonitor(val);
+                          if (val !== "") {
+                            const num = parseInt(val, 10);
+                            if (num >= 1 && num <= totalPagesMonitor) {
+                              setCurrentPage(num);
+                            }
+                          }
+                        }}
+                        onBlur={() => {
+                          if (
+                            !pageInputMonitor ||
+                            parseInt(pageInputMonitor, 10) < 1
+                          ) {
+                            setCurrentPage(1);
+                            setPageInputMonitor("1");
+                          } else if (
+                            parseInt(pageInputMonitor, 10) > totalPagesMonitor
+                          ) {
+                            setCurrentPage(totalPagesMonitor);
+                            setPageInputMonitor(String(totalPagesMonitor));
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            (e.target as HTMLInputElement).blur();
+                          }
+                        }}
+                        className="w-[38px] h-8 text-center bg-white dark:bg-[#161920] text-zinc-900 dark:text-zinc-100 font-bold text-[13px] rounded-[4px] shadow-xs border border-gray-200/60 dark:border-zinc-700/60 focus:outline-none focus:ring-1.5 focus:ring-[#0d472c] dark:focus:ring-emerald-500 cursor-text"
+                        aria-label="Nomor halaman aktif"
+                        title="Ketik nomor halaman dan tekan Enter"
+                      />
+
+                      {/* NEXT BUTTON */}
+                      <button
+                        type="button"
+                        disabled={validPageMonitor >= totalPagesMonitor}
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPagesMonitor),
+                          )
+                        }
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
+                        aria-label="Halaman berikutnya"
+                      >
+                        <ChevronRight className="w-4 h-4 stroke-[2.2]" />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </section>
         </main>

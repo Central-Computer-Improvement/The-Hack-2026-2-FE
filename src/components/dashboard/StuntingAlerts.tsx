@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { ChevronRight, X, Sparkles } from "lucide-react";
-import { dataAnak } from "@/lib/data-anak";
+import { useDataAnak } from "@/lib/data-anak-store";
+import { useHasMounted } from "@/hooks/useHasMounted";
+import { SkeletonAlertCard } from "@/components/_shared/skeletons";
 
 interface ChildAlert {
   id: string;
@@ -28,9 +30,15 @@ const formatIndonesianDate = (dateString: string) => {
 };
 
 export const StuntingAlerts: React.FC = () => {
+  const hasMounted = useHasMounted();
+  const currentData = useDataAnak();
   const [selectedChild, setSelectedChild] = useState<ChildAlert | null>(null);
 
-  const alertList: ChildAlert[] = dataAnak
+  if (!hasMounted) {
+    return <SkeletonAlertCard />;
+  }
+
+  const alertList: ChildAlert[] = currentData
     .filter((anak) => ["Stunting", "Gizi Kurang", "Gizi Buruk"].includes(anak.statusGizi))
     .map((anak) => ({
       id: anak.id,

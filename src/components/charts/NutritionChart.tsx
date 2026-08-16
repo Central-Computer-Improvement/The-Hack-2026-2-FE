@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { dataAnak } from "@/lib/data-anak";
+import { useDataAnak } from "@/lib/data-anak-store";
+import { useHasMounted } from "@/hooks/useHasMounted";
+import { SkeletonChart } from "@/components/_shared/skeletons";
 
 interface BarData {
   id: string;
@@ -12,12 +14,18 @@ interface BarData {
 }
 
 export const NutritionChart: React.FC = () => {
+  const hasMounted = useHasMounted();
+  const currentData = useDataAnak();
   const [hoveredBar, setHoveredBar] = useState<BarData | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
   });
   const [containerWidth, setContainerWidth] = useState<number>(500);
+
+  if (!hasMounted) {
+    return <SkeletonChart />;
+  }
 
   // 4 Kategori Status Gizi Resmi
   const categories = [
@@ -27,9 +35,9 @@ export const NutritionChart: React.FC = () => {
     { id: "4", category: "Stunting", color: "#ef4444" },
   ];
 
-  // Hitung jumlah riil per kategori dari data-anak.ts (Single Source of Truth)
+  // Hitung jumlah riil per kategori dari persistent store
   const counts = categories.map(
-    (cat) => dataAnak.filter((a) => a.statusGizi === cat.category).length,
+    (cat) => currentData.filter((a) => a.statusGizi === cat.category).length,
   );
 
   // Perhitungan Sumbu Y 100% Dinamis mengikuti data maksimum

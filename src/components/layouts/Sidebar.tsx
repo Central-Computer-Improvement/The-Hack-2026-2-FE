@@ -209,10 +209,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isMobileOpen && (
         <div className="lg:hidden flex fixed inset-0 z-50">
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-black/60 transition-opacity duration-300"
             onClick={onCloseMobile}
           />
-          <div className="relative flex-1 max-w-[290px] w-full h-full z-10 transition-transform duration-300">
+          <div className="relative flex-1 max-w-[290px] w-full h-full z-10 shadow-2xl transition-transform duration-300">
             {renderContent(false, true)}
           </div>
         </div>

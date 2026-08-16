@@ -16,8 +16,8 @@ export const LoginForm: React.FC = () => {
     e.preventDefault();
     let hasError = false;
 
-    const validUsernames = ["bidan_sri", "bidan_sri_wahyuni", "admin"];
-    const validPasswords = ["simgizi2026", "posyandu123"];
+    const validUsernames = ["kelompok2"];
+    const validPasswords = ["simgizi2026"];
 
     const cleanUsername = username.trim().toLowerCase();
     const cleanPassword = password.trim();

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,6 +18,9 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "SimGizi",
   description: "Sistem Informasi & Simulasi Gizi",
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
+  },
 };
 
 export default function RootLayout({
@@ -54,8 +58,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+      <body className="min-h-full flex flex-col bg-[#f8f9fa] dark:bg-[#0B0F14] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
         {children}
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

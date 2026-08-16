@@ -1,17 +1,26 @@
 "use client";
 
 import React from "react";
-import { dataAnak } from "@/lib/data-anak";
+import { useDataAnak } from "@/lib/data-anak-store";
+import { useHasMounted } from "@/hooks/useHasMounted";
+import { SkeletonStatCard } from "@/components/_shared/skeletons";
 import { Smile, AlertTriangle, CheckSquare, Percent } from "lucide-react";
 
 export const HealthSummary: React.FC = () => {
-  // Metrik terhitung dari dataAnak
-  const totalAnak = dataAnak.length;
-  const anakBeresiko = dataAnak.filter(
+  const hasMounted = useHasMounted();
+  const currentData = useDataAnak();
+
+  if (!hasMounted) {
+    return <SkeletonStatCard />;
+  }
+
+  // Metrik terhitung dari persistent store
+  const totalAnak = currentData.length;
+  const anakBeresiko = currentData.filter(
     (anak) => anak.statusGizi !== "Normal",
   ).length;
-  const pemeriksaan = dataAnak.length;
-  const normalCount = dataAnak.filter(
+  const pemeriksaan = currentData.length;
+  const normalCount = currentData.filter(
     (anak) => anak.statusGizi === "Normal",
   ).length;
   const normalPercentage =

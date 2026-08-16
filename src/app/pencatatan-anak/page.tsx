@@ -1,22 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Sidebar from "@/components/layouts/Sidebar";
 import Topbar from "@/components/layouts/Topbar";
 import WhoRulesModal from "@/components/_shared/WhoRulesModal";
 import CustomSelect from "@/components/forms/CustomSelect";
-import CustomDatePicker from "@/components/forms/CustomDatePicker";
-import { Book, CheckCircle2 } from "lucide-react";
+import { Book } from "lucide-react";
+
+import { addDataAnak, isNikBalitaTerdaftar } from "@/lib/data-anak-store";
+import { AnakRecord } from "@/lib/data-anak";
+import { showToast } from "@/lib/custom-toast";
 
 export default function PencatatanAnakPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showWhoRules, setShowWhoRules] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
 
   // Form State starts EMPTY so placeholders are visible by default
   const [formData, setFormData] = useState({
     namaBalita: "",
-    nikOrangTua: "",
+    nikBalita: "",
     namaOrangTua: "",
     jenisKelamin: "",
     tanggalLahir: "",
@@ -27,27 +29,37 @@ export default function PencatatanAnakPage() {
     alamat: "",
   });
 
-  // Calculated Analysis State
-  const [calcResult, setCalcResult] = useState<{
-    zScoreBBU: string;
-    zScoreTBU: string;
-    zScoreBBTB: string;
-    statusGizi: string;
-    statusBadgeColor: string;
-    rekomendasiAI: string;
-  } | null>(null);
+  const isNikInvalid =
+    formData.nikBalita.length > 0 && formData.nikBalita.length < 16;
+  const isNikDuplicate =
+    formData.nikBalita.length === 16 &&
+    isNikBalitaTerdaftar(formData.nikBalita);
 
-  // Dynamic Z-score & WHO Status calculation
-  useEffect(() => {
-    const bb = parseFloat(formData.beratBadan.replace(",", "."));
-    const tb = parseFloat(formData.tinggiBadan.replace(",", "."));
-    const usia = parseInt(formData.umurBulan) || 0;
+  const umurNum = parseInt(formData.umurBulan, 10);
+  const isUmurInvalid =
+    formData.umurBulan !== "" &&
+    (isNaN(umurNum) || umurNum > 59 || umurNum < 0);
 
-    if (!bb || !tb || isNaN(bb) || isNaN(tb) || bb <= 0 || tb <= 0) {
-      setCalcResult(null);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.nikBalita.length !== 16 || isUmurInvalid || isNikDuplicate) {
+      if (isNikDuplicate) {
+        showToast.error(
+          "NIK Balita ini sudah terdaftar pada data lain. Periksa kembali data yang diinput.",
+        );
+      }
       return;
     }
 
+    const bb = parseFloat(formData.beratBadan.replace(",", ".")) || 10.0;
+    const tb = parseFloat(formData.tinggiBadan.replace(",", ".")) || 80.0;
+    const usia = Math.min(
+      59,
+      Math.max(0, parseInt(formData.umurBulan, 10) || 0),
+    );
+    const today = new Date().toISOString().split("T")[0];
+
+    // Hitung Z-Score & Status Gizi berdasarkan standar WHO
     const medianTB = 75 + usia * 0.75;
     const medianBB = 3.5 + usia * 0.35;
 
@@ -55,65 +67,67 @@ export default function PencatatanAnakPage() {
     const zBB = parseFloat(((bb - medianBB) / 1.5).toFixed(2));
     const zBB_TB = parseFloat((zBB - zTB).toFixed(2));
 
-    let status = "Normal";
-    let badgeColor =
-      "bg-[#eaf5ec] dark:bg-emerald-950/60 text-[#0d472c] dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60";
+    let status: "Normal" | "Gizi Kurang" | "Gizi Buruk" | "Stunting" = "Normal";
 
     if (zTB < -3.0 || zBB < -3.0 || zBB_TB < -3.0) {
       status = "Stunting";
-      badgeColor =
-        "bg-[#fdeaea] dark:bg-rose-950/60 text-[#b91c1c] dark:text-rose-300 border-rose-200 dark:border-rose-900/60";
     } else if (zTB < -2.0 || zBB < -2.0 || zBB_TB < -2.0) {
       status = "Gizi Kurang";
-      badgeColor =
-        "bg-[#fff8dd] dark:bg-amber-950/60 text-[#b4540a] dark:text-amber-300 border-amber-200 dark:border-amber-900/60";
     }
 
     const zBBUStr = zBB > 0 ? `+${zBB} SD` : `${zBB} SD`;
     const zTBUStr = zTB > 0 ? `+${zTB} SD` : `${zTB} SD`;
     const zBBTBStr = zBB_TB > 0 ? `+${zBB_TB} SD` : `${zBB_TB} SD`;
 
-    const nama = formData.namaBalita || "Pasien";
+    const nama = formData.namaBalita.trim() || "Pasien";
+    const isCritical =
+      status === "Stunting" || (status as string) === "Gizi Buruk";
     const aiAdvice = `[ANALISIS MEDIS KEMENKES RI & WHO] Pasien ${nama} (${usia} Bulan) terindikasi status ${status} dengan Z-Score BB/TB ${zBBTBStr} (BB ${bb} kg pada TB ${tb} cm). ${
-      status === "Stunting" || status === "Gizi Buruk"
+      isCritical
         ? "Berisiko tinggi terhadap gangguan pertumbuhan dan kognitif dini. Segera konsultasikan ke Posyandu/Puskesmas untuk pemantauan dan intervensi gizi terpadu."
         : "Pertahankan pemantauan gizi rutin bulanan dan berikan asupan makanan bergizi seimbang."
     }`;
 
-    setCalcResult({
+    const newChildRecord: AnakRecord = {
+      id: `anak-${Date.now()}`,
+      nama: nama,
+      nik: formData.nikBalita,
+      usiaBulan: usia,
+      jenisKelamin: (formData.jenisKelamin as "L" | "P") || "L",
+      namaOrangTua: formData.namaOrangTua.trim() || "Orang Tua",
+      beratBadan: bb,
+      tinggiBadan: tb,
+      statusGizi: status,
       zScoreBBU: zBBUStr,
       zScoreTBU: zTBUStr,
       zScoreBBTB: zBBTBStr,
-      statusGizi: status,
-      statusBadgeColor: badgeColor,
+      tanggalPeriksa: today,
       rekomendasiAI: aiAdvice,
+    };
+
+    // Save to persistent localStorage store
+    addDataAnak(newChildRecord);
+
+    // Custom Sleek Toast
+    showToast.success("Data Balita berhasil ditambahkan");
+
+    // Reset Form
+    setFormData({
+      namaBalita: "",
+      nikBalita: "",
+      namaOrangTua: "",
+      jenisKelamin: "",
+      tanggalLahir: "",
+      tanggalPemeriksaan: "",
+      umurBulan: "",
+      beratBadan: "",
+      tinggiBadan: "",
+      alamat: "",
     });
-  }, [
-    formData.beratBadan,
-    formData.tinggiBadan,
-    formData.umurBulan,
-    formData.namaBalita,
-  ]);
-
-  const isNikInvalid =
-    formData.nikOrangTua.length > 0 && formData.nikOrangTua.length < 16;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.nikOrangTua.length !== 16) {
-      return;
-    }
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 4000);
   };
 
-  const jenisKelaminOptions = [
-    { value: "L", label: "Laki - Laki" },
-    { value: "P", label: "Perempuan" },
-  ];
-
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f8f9fa] dark:bg-[#0f1115] text-zinc-900 dark:text-zinc-100 font-inter transition-colors duration-200">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f8f9fa] dark:bg-[#0B0F14] text-zinc-900 dark:text-zinc-100 font-inter transition-colors duration-200">
       {/* Sidebar */}
       <Sidebar
         currentTab="pencatatan-anak"
@@ -132,47 +146,38 @@ export default function PencatatanAnakPage() {
           onClose={() => setShowWhoRules(false)}
         />
 
-        {/* Page Content */}
-        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-5 w-full flex-1">
-          {/* Header Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h1 className="font-inter text-[24px] sm:text-[28px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+        {/* Content Body */}
+        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+            <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-zinc-900 dark:text-[#F0F3F7]">
               Pencatatan Data Anak
             </h1>
 
-              <button
-                type="button"
-                onClick={() => setShowWhoRules(true)}
-                className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 text-[#0d472c] dark:text-emerald-300 font-inter text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Book className="w-[18px] h-[18px] stroke-[1.8]" />
-                <span>Rumus & Aturan WHO</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => setShowWhoRules(true)}
+              className="px-4 h-[42px] bg-[#eef3ed] dark:bg-[#1b2720] border border-[#c3dfc3] dark:border-emerald-900/60 text-[#0d472c] dark:text-emerald-300 font-inter text-[14px] font-medium rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            >
+              <Book className="w-[18px] h-[18px] stroke-[1.8]" />
+              <span>Rumus & Aturan WHO</span>
+            </button>
           </div>
 
-          {/* Success Alert Banner */}
-          {isSaved && (
-            <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900 text-[#0d472c] dark:text-emerald-300 flex items-center gap-3 animate-in fade-in duration-200">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span className="text-[13.5px] font-semibold">
-                Data balita berhasil ditambahkan ke sistem!
-              </span>
-            </div>
-          )}
-
-          <section className="w-full bg-white dark:bg-[#161920] border border-gray-200/70 dark:border-zinc-800/70 rounded-[24px] p-5 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-colors duration-200">
-            <h2 className="font-inter text-[18px] sm:text-[19px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
-              Peringatan Dini Gizi & Stunting
+          {/* Form Card (Clean Full Width) */}
+          <div className="bg-white dark:bg-[#161920] rounded-[24px] border border-[#e6e8eb] dark:border-[#262a34] p-5 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+            <h2 className="text-[18px] font-bold text-zinc-900 dark:text-[#F0F3F7]">
+              Data Identitas & Hasil Pengukuran
             </h2>
-            <p className="font-inter text-[13px] sm:text-[13.5px] text-zinc-400 dark:text-zinc-500 mt-1">
+            <p className="text-[13px] text-zinc-500 dark:text-[#9BA5B0] mt-1">
               Balita yang memerlukan tindakan intervensi
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-[32px] mt-[32px]">
-              {/* Row 1: Nama Lengkap Balita & NIK Orang Tua */}
+              {/* Row 1: Nama Lengkap Balita & NIK Balita */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
                     Nama Lengkap Balita
                   </label>
                   <input
@@ -183,41 +188,46 @@ export default function PencatatanAnakPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, namaBalita: e.target.value })
                     }
-                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1A222C] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559] focus:outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
-                    NIK Orang Tua Balita
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                    NIK Balita
                   </label>
                   <input
                     type="text"
                     inputMode="numeric"
                     maxLength={16}
                     required
-                    placeholder="Masukkan 16 digit NIK"
-                    value={formData.nikOrangTua || ""}
+                    placeholder="Masukkan 16 digit NIK balita"
+                    value={formData.nikBalita || ""}
                     onChange={(e) => {
                       const val = e.target.value
                         .replace(/\D/g, "")
                         .slice(0, 16);
                       setFormData({
                         ...formData,
-                        nikOrangTua: val,
+                        nikBalita: val,
                       });
                     }}
-                    className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border transition-colors placeholder:text-zinc-400 focus:outline-none ${
-                      isNikInvalid
+                    className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580] focus:outline-none ${
+                      isNikInvalid || isNikDuplicate
                         ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
-                        : formData.nikOrangTua.length === 16
-                          ? "bg-white dark:bg-[#1e222d] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
-                          : "bg-white dark:bg-[#1e222d] border-gray-200 dark:border-zinc-700 focus:border-[#0d472c]"
+                        : formData.nikBalita.length === 16
+                          ? "bg-white dark:bg-[#1A222C] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
+                          : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
                     }`}
                   />
                   {isNikInvalid && (
                     <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
                       <span>NIK harus terdiri dari 16 digit angka</span>
+                    </p>
+                  )}
+                  {isNikDuplicate && (
+                    <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
+                      <span>NIK Balita ini sudah terdaftar</span>
                     </p>
                   )}
                 </div>
@@ -226,23 +236,36 @@ export default function PencatatanAnakPage() {
               {/* Row 2: Umur, Jenis Kelamin, Nama Orang Tua */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
                     Umur (Bulan)
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
                     required
-                    placeholder="Masukan umur"
+                    placeholder="Masukkan umur"
                     value={formData.umurBulan}
-                    onChange={(e) =>
-                      setFormData({ ...formData, umurBulan: e.target.value })
-                    }
-                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setFormData({ ...formData, umurBulan: val });
+                    }}
+                    className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580] focus:outline-none ${
+                      isUmurInvalid
+                        ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
+                        : formData.umurBulan !== ""
+                          ? "bg-white dark:bg-[#1A222C] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
+                          : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
+                    }`}
                   />
+                  {isUmurInvalid && (
+                    <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
+                      <span>Umur harus antara 0 - 59 bulan</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
                     Jenis Kelamin
                   </label>
                   <CustomSelect
@@ -256,12 +279,12 @@ export default function PencatatanAnakPage() {
                     }
                     placeholder="Pilih jenis kelamin"
                     containerClassName="w-full flex"
-                    triggerClassName="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between"
+                    triggerClassName="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1A222C] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border border-gray-200 dark:border-[#232B36] hover:bg-gray-50 dark:hover:bg-[#1E222D] transition-colors flex items-center justify-between"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
                     Nama Orang Tua
                   </label>
                   <input
@@ -275,7 +298,7 @@ export default function PencatatanAnakPage() {
                         namaOrangTua: e.target.value,
                       })
                     }
-                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1A222C] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559] focus:outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580]"
                   />
                 </div>
               </div>
@@ -283,37 +306,50 @@ export default function PencatatanAnakPage() {
               {/* Row 3: Berat Badan & Tinggi Badan */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
                     Berat Badan (kg)
                   </label>
                   <input
                     type="text"
+                    inputMode="decimal"
                     required
                     placeholder="Masukan Berat Badan"
                     value={formData.beratBadan}
-                    onChange={(e) =>
-                      setFormData({ ...formData, beratBadan: e.target.value })
-                    }
-                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/[^0-9.,]/g, "");
+                      const matches = val.match(/[.,]/g);
+                      if (matches && matches.length > 1) {
+                        const firstSep = val.match(/[.,]/)?.[0] || ".";
+                        const parts = val.split(/[.,]/);
+                        val = parts[0] + firstSep + parts.slice(1).join("");
+                      }
+                      setFormData({ ...formData, beratBadan: val });
+                    }}
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1A222C] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559] focus:outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-zinc-200 mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
                     Tinggi Badan (cm)
                   </label>
                   <input
                     type="text"
+                    inputMode="decimal"
                     required
                     placeholder="Masukan Tinggi Badan"
                     value={formData.tinggiBadan}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tinggiBadan: e.target.value,
-                      })
-                    }
-                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1e222d] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-zinc-100 border border-gray-200 dark:border-zinc-700 focus:border-[#0d472c] focus:outline-none transition-colors placeholder:text-zinc-400"
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/[^0-9.,]/g, "");
+                      const matches = val.match(/[.,]/g);
+                      if (matches && matches.length > 1) {
+                        const firstSep = val.match(/[.,]/)?.[0] || ".";
+                        const parts = val.split(/[.,]/);
+                        val = parts[0] + firstSep + parts.slice(1).join("");
+                      }
+                      setFormData({ ...formData, tinggiBadan: val });
+                    }}
+                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1A222C] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559] focus:outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580]"
                   />
                 </div>
               </div>
@@ -326,7 +362,7 @@ export default function PencatatanAnakPage() {
                 Tambah data balita
               </button>
             </form>
-          </section>
+          </div>
         </main>
       </div>
     </div>

@@ -76,11 +76,11 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
   return (
     <div ref={containerRef} className="relative font-inter select-none inline-block">
-      {/* Trigger Pill Button (Height 42px to match Rekap) */}
+      {/* Trigger Pill Button (Height 42px to match Rekap, Centered Content) */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`h-[42px] px-3.5 rounded-xl text-[13px] font-medium inline-flex items-center gap-2.5 transition-all duration-200 cursor-pointer border ${
+        className={`h-[42px] px-4 rounded-xl text-[13px] font-medium inline-flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer border ${
           value
             ? "bg-[#dcfce7] dark:bg-emerald-950/50 border-[#166534] dark:border-emerald-600 text-[#166534] dark:text-emerald-300"
             : "bg-white dark:bg-[#161920] border-gray-200 dark:border-zinc-700 hover:border-gray-300 text-zinc-400 dark:text-zinc-500"
@@ -94,7 +94,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           }`}
         />
 
-        <span>{value ? value : placeholder}</span>
+        <span className="leading-none">{value ? value : placeholder}</span>
 
         {value && (
           <span

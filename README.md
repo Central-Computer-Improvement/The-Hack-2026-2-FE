@@ -158,15 +158,6 @@ npm run start
 
 ---
 
-## 7. Kredensial Uji Coba (Demo Access)
-
-Untuk masuk ke dalam dashboard aplikasi:
-
-- **Username**: _(dapat diisi nama pengguna atau identitas penguji apa saja)_
-- **Password**: _(minimal 4 karakter)_
-
----
-
-## 8. Lisensi
+## 7. Lisensi
 
 Proyek ini dikembangkan untuk keperluan kompetisi dan pengembangan sistem kesehatan masyarakat digital. Hak cipta dilindungi undang-undang.

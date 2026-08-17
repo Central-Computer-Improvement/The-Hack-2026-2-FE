@@ -10,10 +10,12 @@ import { Book } from "lucide-react";
 import { addDataAnak, isNikBalitaTerdaftar } from "@/lib/data-anak-store";
 import { AnakRecord } from "@/lib/data-anak";
 import { showToast } from "@/lib/custom-toast";
+import { loadReference, nilaiGiziAnak } from "@/lib/zscore";
 
 export default function PencatatanAnakPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showWhoRules, setShowWhoRules] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State starts EMPTY so placeholders are visible by default
   const [formData, setFormData] = useState({
@@ -40,90 +42,179 @@ export default function PencatatanAnakPage() {
     formData.umurBulan !== "" &&
     (isNaN(umurNum) || umurNum > 59 || umurNum < 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.nikBalita.length !== 16 || isUmurInvalid || isNikDuplicate) {
       if (isNikDuplicate) {
         showToast.error(
           "NIK Balita ini sudah terdaftar pada data lain. Periksa kembali data yang diinput.",
         );
+      } else if (formData.nikBalita.length !== 16) {
+        showToast.error("NIK harus terdiri dari 16 digit angka");
       }
       return;
     }
 
-    const bb = parseFloat(formData.beratBadan.replace(",", ".")) || 10.0;
-    const tb = parseFloat(formData.tinggiBadan.replace(",", ".")) || 80.0;
-    const usia = Math.min(
-      59,
-      Math.max(0, parseInt(formData.umurBulan, 10) || 0),
-    );
-    const today = new Date().toISOString().split("T")[0];
+    setIsSubmitting(true);
 
-    // Hitung Z-Score & Status Gizi berdasarkan standar WHO
-    const medianTB = 75 + usia * 0.75;
-    const medianBB = 3.5 + usia * 0.35;
+    try {
+      const bb = parseFloat(formData.beratBadan.replace(",", "."));
+      const tb = parseFloat(formData.tinggiBadan.replace(",", "."));
+      const usia = parseInt(formData.umurBulan, 10);
 
-    const zTB = parseFloat(((tb - medianTB) / 3.5).toFixed(2));
-    const zBB = parseFloat(((bb - medianBB) / 1.5).toFixed(2));
-    const zBB_TB = parseFloat((zBB - zTB).toFixed(2));
+      if (isNaN(bb) || isNaN(tb) || bb <= 0 || tb <= 0) {
+        throw new Error(
+          "Berat badan dan tinggi badan harus diisi dengan angka valid lebih dari 0.",
+        );
+      }
 
-    let status: "Normal" | "Gizi Kurang" | "Gizi Buruk" | "Stunting" = "Normal";
+      if (isNaN(usia) || usia < 0 || usia > 59) {
+        throw new Error("Umur balita harus antara 0 - 59 bulan.");
+      }
 
-    if (zTB < -3.0 || zBB < -3.0 || zBB_TB < -3.0) {
-      status = "Stunting";
-    } else if (zTB < -2.0 || zBB < -2.0 || zBB_TB < -2.0) {
-      status = "Gizi Kurang";
+      if (!formData.jenisKelamin) {
+        throw new Error("Jenis kelamin balita harus dipilih.");
+      }
+
+      const jk: "laki-laki" | "perempuan" =
+        formData.jenisKelamin === "P" ? "perempuan" : "laki-laki";
+      const today = new Date().toISOString().split("T")[0];
+
+      // 1. Kalkulasi Z-score resmi WHO Permenkes No. 2/2020
+      const ref = loadReference();
+      const hasil = nilaiGiziAnak(ref, usia, jk, bb, tb);
+
+      const pos = usia < 24 ? "telentang" : "berdiri";
+      const indeksPanjang = pos === "telentang" ? "PB/U" : "TB/U";
+      const indeksBbPanjang = pos === "telentang" ? "BB/PB" : "BB/TB";
+
+      const zBbu = hasil["BB/U"].z_score;
+      const zTbu = hasil[indeksPanjang].z_score;
+      const zBbtb = hasil[indeksBbPanjang].z_score;
+
+      const statusBbu = hasil["BB/U"].status;
+      const statusTbu = hasil[indeksPanjang].status;
+      const statusBbtb = hasil[indeksBbPanjang].status;
+
+      // 2. Penentuan Status Gizi Utama (Aturan Prioritas)
+      let status: "Normal" | "Gizi Kurang" | "Gizi Buruk" | "Stunting" = "Normal";
+
+      if (statusTbu.toLowerCase().includes("stunted")) {
+        status = "Stunting";
+      } else if (
+        statusBbtb.toLowerCase().includes("gizi buruk") ||
+        statusBbtb.toLowerCase().includes("severely wasted")
+      ) {
+        status = "Gizi Buruk";
+      } else if (
+        statusBbtb.toLowerCase().includes("gizi kurang") ||
+        statusBbtb.toLowerCase().includes("wasted")
+      ) {
+        status = "Gizi Kurang";
+      } else if (
+        statusBbu.toLowerCase().includes("kurang") ||
+        statusBbu.toLowerCase().includes("underweight")
+      ) {
+        status = "Gizi Kurang";
+      } else {
+        status = "Normal";
+      }
+
+      // 3. Formatting String Z-Score & Template Fallback Konsisten
+      const zBBUStr = zBbu > 0 ? `+${zBbu} SD` : `${zBbu} SD`;
+      const zTBUStr = zTbu > 0 ? `+${zTbu} SD` : `${zTbu} SD`;
+      const zBBTBStr = zBbtb > 0 ? `+${zBbtb} SD` : `${zBbtb} SD`;
+
+      const nama = formData.namaBalita.trim() || "Pasien";
+      const isCritical = status === "Stunting" || status === "Gizi Buruk";
+
+      // Fallback Analisis Lokal Pasti (berbasis Z-score resmi real)
+      let aiAdvice = `[ANALISIS MEDIS KEMENKES RI & WHO] Pasien ${nama} (${usia} Bulan) terindikasi status ${status} dengan Z-Score BB/TB ${zBBTBStr} (BB ${bb} kg pada TB ${tb} cm). ${
+        isCritical
+          ? "Berisiko tinggi terhadap gangguan pertumbuhan dan kognitif dini. Segera konsultasikan ke Posyandu/Puskesmas untuk pemantauan dan intervensi gizi terpadu."
+          : "Pertahankan pemantauan gizi rutin bulanan dan berikan asupan makanan bergizi seimbang."
+      }`;
+
+      // 4. Request Rekomendasi ke Gemini API Server Route
+      try {
+        const res = await fetch("/api/rekomendasi-ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nama,
+            usiaBulan: usia,
+            jenisKelamin: jk,
+            beratKg: bb,
+            tinggiCm: tb,
+            statusGizi: status,
+            zScoreBBU: zBBUStr,
+            zScoreTBU: zTBUStr,
+            zScoreBBTB: zBBTBStr,
+          }),
+        });
+
+        if (res.ok) {
+          const aiData = await res.json();
+          if (aiData.rekomendasi) {
+            aiAdvice = aiData.rekomendasi;
+          }
+        } else {
+          showToast.error(
+            "Rekomendasi AI gagal dimuat, menggunakan analisis lokal.",
+          );
+        }
+      } catch {
+        showToast.error(
+          "Jaringan AI tidak terjangkau, menggunakan analisis lokal.",
+        );
+      }
+
+      // 5. Data anak TETAP tersimpan secara utuh & aman
+      const newChildRecord: AnakRecord = {
+        id: `anak-${Date.now()}`,
+        nama: nama,
+        nik: formData.nikBalita,
+        usiaBulan: usia,
+        jenisKelamin: (formData.jenisKelamin as "L" | "P") || "L",
+        namaOrangTua: formData.namaOrangTua.trim() || "Orang Tua",
+        beratBadan: bb,
+        tinggiBadan: tb,
+        statusGizi: status,
+        zScoreBBU: zBBUStr,
+        zScoreTBU: zTBUStr,
+        zScoreBBTB: zBBTBStr,
+        tanggalPeriksa: today,
+        rekomendasiAI: aiAdvice,
+      };
+
+      // Save to persistent localStorage store
+      addDataAnak(newChildRecord);
+
+      // Custom Sleek Toast
+      showToast.success("Data Balita berhasil ditambahkan");
+
+      // Reset Form
+      setFormData({
+        namaBalita: "",
+        nikBalita: "",
+        namaOrangTua: "",
+        jenisKelamin: "",
+        tanggalLahir: "",
+        tanggalPemeriksaan: "",
+        umurBulan: "",
+        beratBadan: "",
+        tinggiBadan: "",
+        alamat: "",
+      });
+    } catch (error) {
+      const errMsg =
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat menghitung Z-score status gizi.";
+      showToast.error(errMsg);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const zBBUStr = zBB > 0 ? `+${zBB} SD` : `${zBB} SD`;
-    const zTBUStr = zTB > 0 ? `+${zTB} SD` : `${zTB} SD`;
-    const zBBTBStr = zBB_TB > 0 ? `+${zBB_TB} SD` : `${zBB_TB} SD`;
-
-    const nama = formData.namaBalita.trim() || "Pasien";
-    const isCritical =
-      status === "Stunting" || (status as string) === "Gizi Buruk";
-    const aiAdvice = `[ANALISIS MEDIS KEMENKES RI & WHO] Pasien ${nama} (${usia} Bulan) terindikasi status ${status} dengan Z-Score BB/TB ${zBBTBStr} (BB ${bb} kg pada TB ${tb} cm). ${
-      isCritical
-        ? "Berisiko tinggi terhadap gangguan pertumbuhan dan kognitif dini. Segera konsultasikan ke Posyandu/Puskesmas untuk pemantauan dan intervensi gizi terpadu."
-        : "Pertahankan pemantauan gizi rutin bulanan dan berikan asupan makanan bergizi seimbang."
-    }`;
-
-    const newChildRecord: AnakRecord = {
-      id: `anak-${Date.now()}`,
-      nama: nama,
-      nik: formData.nikBalita,
-      usiaBulan: usia,
-      jenisKelamin: (formData.jenisKelamin as "L" | "P") || "L",
-      namaOrangTua: formData.namaOrangTua.trim() || "Orang Tua",
-      beratBadan: bb,
-      tinggiBadan: tb,
-      statusGizi: status,
-      zScoreBBU: zBBUStr,
-      zScoreTBU: zTBUStr,
-      zScoreBBTB: zBBTBStr,
-      tanggalPeriksa: today,
-      rekomendasiAI: aiAdvice,
-    };
-
-    // Save to persistent localStorage store
-    addDataAnak(newChildRecord);
-
-    // Custom Sleek Toast
-    showToast.success("Data Balita berhasil ditambahkan");
-
-    // Reset Form
-    setFormData({
-      namaBalita: "",
-      nikBalita: "",
-      namaOrangTua: "",
-      jenisKelamin: "",
-      tanggalLahir: "",
-      tanggalPemeriksaan: "",
-      umurBulan: "",
-      beratBadan: "",
-      tinggiBadan: "",
-      alamat: "",
-    });
   };
 
   return (
@@ -147,12 +238,17 @@ export default function PencatatanAnakPage() {
         />
 
         {/* Content Body */}
-        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1">
+        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1 min-h-screen">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-            <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-zinc-900 dark:text-[#F0F3F7]">
-              Pencatatan Data Anak
-            </h1>
+          <div className="flex flex-row items-center justify-between gap-4 min-h-[42px] h-[42px] shrink-0">
+            <div>
+              <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-zinc-900 dark:text-[#F0F3F7]">
+                Pencatatan Data Anak
+              </h1>
+              <p className="font-inter text-[13px] sm:text-[13.5px] text-zinc-500 dark:text-[#9BA5B0] mt-1.5 leading-normal">
+                Input data antropometri balita untuk pemantauan status gizi
+              </p>
+            </div>
 
             <button
               type="button"
@@ -357,9 +453,12 @@ export default function PencatatanAnakPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full py-4 bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#072a1a] text-white font-inter text-[15.5px] font-medium rounded-[8px] transition-colors shadow-xs cursor-pointer mt-4"
+                disabled={isSubmitting}
+                className="w-full py-4 bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#072a1a] disabled:opacity-75 disabled:cursor-not-allowed text-white font-inter text-[15.5px] font-medium rounded-[8px] transition-colors shadow-xs cursor-pointer mt-4"
               >
-                Tambah data balita
+                {isSubmitting
+                  ? "Menganalisis & Menyimpan..."
+                  : "Tambah data balita"}
               </button>
             </form>
           </div>

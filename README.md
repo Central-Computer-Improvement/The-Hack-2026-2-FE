@@ -189,7 +189,11 @@ npm run start
 
 ---
 
-## 7. Lisensi
+## 7. Login Demo
 
-Proyek ini dikembangkan untuk keperluan kompetisi dan pengembangan sistem kesehatan masyarakat digital. Hak cipta dilindungi undang-undang.
+Untuk masuk ke dalam dashboard aplikasi:
 
+- **Username**: `kelompok2`
+- **Password**: `simgizi2026`
+
+---

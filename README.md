@@ -1,4 +1,4 @@
-# SimGizi — Sistem Informasi & Monitoring Gizi Balita Terintegrasi
+# SimGizi — Sistem Informasi Gizi Anak & Deteksi Dini Stunting
 
 <p align="center">
   <strong>Platform Pemantauan Status Antropometri & Deteksi Dini Stunting Balita Berbasis Standar WHO dan Rekomendasi AI</strong>

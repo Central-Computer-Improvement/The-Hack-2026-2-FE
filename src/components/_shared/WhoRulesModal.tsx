@@ -42,14 +42,13 @@ export function WhoRulesModal({ isOpen, onClose }: WhoRulesModalProps) {
         {/* Formulas Box */}
         <div className="p-4 rounded-xl bg-[#eef8f2] dark:bg-emerald-950/20 mb-5">
           <h4 className="font-bold text-[#0d472c] dark:text-emerald-400 text-[13px] mb-2">
-            Rumus Matematika Z-Score WHO
+            Rumus Baku Z-Score WHO (Permenkes No. 2/2020)
           </h4>
-          <ul className="text-[13px] text-[#125c3a] dark:text-emerald-300 font-medium space-y-1 ml-1">
-            <li>• Median TB = 75 + (UsiaBulan &times; 0.75) cm</li>
-            <li>• Z-Score TB/U (Stunting) = (TB - Median TB) / 3.5 SD</li>
-            <li>• Median BB = 3.5 + (UsiaBulan &times; 0.35) kg</li>
-            <li>• Z-Score BB/U (Gizi) = (BB - Median BB) / 1.5 SD</li>
-            <li>• Z-Score BB/TB (Wasting) = Z-Score BB/U - Z-Score TB/U</li>
+          <ul className="text-[13px] text-[#125c3a] dark:text-emerald-300 font-medium space-y-1.5 ml-1">
+            <li>• Z-Score = (Nilai Riil − Median Acuan) / Standar Deviasi (SD)</li>
+            <li>• Jika Nilai ≥ Median: SD = (+1 SD − Median Acuan)</li>
+            <li>• Jika Nilai &lt; Median: SD = (Median Acuan − −1 SD)</li>
+            <li>• Indeks Acuan: BB/U, TB/U (PB/U), dan BB/TB (BB/PB) berdasar 730 data resmi Kemenkes RI.</li>
           </ul>
         </div>
 
@@ -104,7 +103,7 @@ export function WhoRulesModal({ isOpen, onClose }: WhoRulesModalProps) {
             Analisis Kritis AI:
           </div>
           <p className="font-medium text-[#7c3aed] dark:text-purple-300 leading-relaxed">
-            Setiap data balita yang diukur akan diproses oleh Google Gemini 1.5 Flash AI untuk mengevaluasi dampak kognitif jangka panjang dan menghasilkan rekomendasi medis klinis yang disesuaikan secara individual.
+            Setiap data balita yang diukur akan diproses oleh Google Gemini 2.5 Flash AI untuk mengevaluasi dampak kognitif jangka panjang dan menghasilkan rekomendasi medis klinis yang disesuaikan secara individual.
           </p>
         </div>
 

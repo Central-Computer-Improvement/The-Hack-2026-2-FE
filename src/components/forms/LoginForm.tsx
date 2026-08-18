@@ -14,7 +14,6 @@ export const LoginForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let hasError = false;
 
     const validUsernames = ["kelompok2"];
     const validPasswords = ["simgizi2026"];
@@ -22,34 +21,40 @@ export const LoginForm: React.FC = () => {
     const cleanUsername = username.trim().toLowerCase();
     const cleanPassword = password.trim();
 
+    // 1. Kategori 1: Validasi Kelengkapan Field (UX)
+    let hasEmpty = false;
+
     if (!cleanUsername) {
       setUsernameError("Username wajib diisi");
-      hasError = true;
-    } else if (!validUsernames.includes(cleanUsername)) {
-      setUsernameError("Username salah");
-      hasError = true;
+      hasEmpty = true;
     } else {
       setUsernameError(null);
     }
 
     if (!cleanPassword) {
       setPasswordError("Password wajib diisi");
-      hasError = true;
-    } else if (!validPasswords.includes(cleanPassword)) {
-      setPasswordError("Password salah");
-      hasError = true;
+      hasEmpty = true;
     } else {
       setPasswordError(null);
     }
 
-    if (!hasError) {
-      // Set session cookie
-      document.cookie = "simgizi-auth=true; path=/; SameSite=Strict";
-
-      // Redirect to dashboard
-      router.push("/");
-      router.refresh();
+    if (hasEmpty) {
+      return;
     }
+
+    // 2. Kategori 2: Validasi Kredensial Keamanan (Anti-User Enumeration)
+    const isValidUser = validUsernames.includes(cleanUsername);
+    const isValidPass = validPasswords.includes(cleanPassword);
+
+    if (!isValidUser || !isValidPass) {
+      setPasswordError("Username/password salah");
+      return;
+    }
+
+    // 3. Kredensial Valid: Set session cookie & Redirect
+    document.cookie = "simgizi-auth=true; path=/; SameSite=Strict";
+    router.push("/");
+    router.refresh();
   };
 
   return (
@@ -97,6 +102,9 @@ export const LoginForm: React.FC = () => {
                 onChange={(e) => {
                   setUsername(e.target.value);
                   if (usernameError) setUsernameError(null);
+                  if (passwordError === "Username/password salah") {
+                    setPasswordError(null);
+                  }
                 }}
                 placeholder="Masukan username anda"
                 className={`w-full px-4 py-3 rounded-xl font-inter text-[16px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none transition-all duration-150 ${

@@ -2,8 +2,8 @@
 
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
-  Zap,
   LayoutDashboard,
   UserPlus,
   FileText,
@@ -70,7 +70,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleLogout = () => {
     // Clear the auth cookie
-    document.cookie = "simgizi-auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie =
+      "simgizi-auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     router.push("/login");
     router.refresh(); // Ensure the proxy re-evaluates the cookie state
   };
@@ -104,12 +105,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="h-[66px] px-4 flex items-center justify-between border-b border-gray-200/70 dark:border-zinc-800/70 shrink-0">
           {/* Logo & Brand Name */}
           <div className="flex items-center gap-2.5">
-            <div className="w-[36px] h-[36px] rounded-xl bg-[#0d472c] flex items-center justify-center text-white shadow-xs shrink-0">
-              <Zap className="w-[18px] h-[18px] fill-white stroke-none" />
+            <div className="w-[36px] h-[36px] rounded-xl overflow-hidden flex items-center justify-center shadow-xs shrink-0">
+              <Image
+                src="/images/Logo-SimGizi.png"
+                alt="Logo SimGizi"
+                width={36}
+                height={36}
+                className="w-full h-full object-contain"
+                unoptimized
+                priority
+              />
             </div>
             <span
               className={`font-inter text-[19px] font-bold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
-                collapsed && !isMobile ? "max-w-0 opacity-0 ml-0" : "max-w-[140px] opacity-100"
+                collapsed && !isMobile
+                  ? "max-w-0 opacity-0 ml-0"
+                  : "max-w-[140px] opacity-100"
               }`}
             >
               SimGizi

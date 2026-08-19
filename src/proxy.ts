@@ -2,15 +2,27 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  const hasAuthCookie = request.cookies.has("simgizi-auth");
-  const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  const pathname = request.nextUrl.pathname;
 
-  // If the user does not have the auth cookie and is NOT trying to access the login page
+  // Izinkan akses langsung tanpa redirect untuk aset publik statis dan file media
+  const isPublicAsset =
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/api") ||
+    /\.(png|jpg|jpeg|svg|webp|ico|css|js)$/i.test(pathname);
+
+  if (isPublicAsset) {
+    return NextResponse.next();
+  }
+
+  const hasAuthCookie = request.cookies.has("simgizi-auth");
+  const isLoginPage = pathname.startsWith("/login");
+
+  // Jika belum login dan mengakses halaman privat -> redirect ke /login
   if (!hasAuthCookie && !isLoginPage) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If the user has the auth cookie and is trying to access the login page
+  // Jika sudah login dan mengakses /login -> redirect ke dashboard (/)
   if (hasAuthCookie && isLoginPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
@@ -19,5 +31,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|images|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)",
+  ],
 };

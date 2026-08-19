@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "SimGizi",
   description: "Sistem Informasi & Simulasi Gizi",
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
+    icon: "/images/Logo-SimGizi.png",
   },
 };
 

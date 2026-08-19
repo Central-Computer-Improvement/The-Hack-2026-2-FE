@@ -122,10 +122,40 @@ export function resetDataAnak(): void {
 }
 
 /**
- * Mengecek apakah NIK Balita sudah terdaftar di data store aktif.
- * Mendukung excludeId opsional untuk kebutuhan edit data di masa depan.
+ * Mengecek apakah entri pemeriksaan untuk NIK Balita pada tanggal pemeriksaan tertentu sudah ada.
+ * Mengizinkan balita dengan NIK yang sama diperiksa kembali di tanggal yang berbeda (checkup berkala/bulanan).
  */
-export function isNikBalitaTerdaftar(nik: string, excludeId?: string): boolean {
+export function isPemeriksaanDuplikat(
+  nik: string,
+  tanggalPeriksa: string,
+  excludeId?: string,
+): boolean {
+  const current = ensureCacheReady();
+  const cleanNik = nik.trim();
+  const cleanTanggal = tanggalPeriksa.trim();
+  if (!cleanNik || !cleanTanggal) return false;
+
+  return current.some(
+    (item) =>
+      item.nik === cleanNik &&
+      item.tanggalPeriksa === cleanTanggal &&
+      (!excludeId || item.id !== excludeId),
+  );
+}
+
+/**
+ * Helper validasi NIK balita:
+ * Jika tanggalPeriksa diberikan -> cek duplikat pada tanggal tersebut (checkup harian).
+ * Jika tanggalPeriksa tidak diberikan -> cek eksistensi NIK secara umum.
+ */
+export function isNikBalitaTerdaftar(
+  nik: string,
+  tanggalPeriksa?: string,
+  excludeId?: string,
+): boolean {
+  if (tanggalPeriksa) {
+    return isPemeriksaanDuplikat(nik, tanggalPeriksa, excludeId);
+  }
   const current = ensureCacheReady();
   const cleanNik = nik.trim();
   if (!cleanNik) return false;

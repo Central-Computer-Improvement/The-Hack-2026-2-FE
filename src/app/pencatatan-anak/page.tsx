@@ -31,11 +31,14 @@ export default function PencatatanAnakPage() {
     alamat: "",
   });
 
+  const todayDate = new Date().toISOString().split("T")[0];
+  const targetDate = formData.tanggalPemeriksaan || todayDate;
+
   const isNikInvalid =
     formData.nikBalita.length > 0 && formData.nikBalita.length < 16;
   const isNikDuplicate =
     formData.nikBalita.length === 16 &&
-    isNikBalitaTerdaftar(formData.nikBalita);
+    isNikBalitaTerdaftar(formData.nikBalita, targetDate);
 
   const umurNum = parseInt(formData.umurBulan, 10);
   const isUmurInvalid =
@@ -47,7 +50,7 @@ export default function PencatatanAnakPage() {
     if (formData.nikBalita.length !== 16 || isUmurInvalid || isNikDuplicate) {
       if (isNikDuplicate) {
         showToast.error(
-          "NIK Balita ini sudah terdaftar pada data lain. Periksa kembali data yang diinput.",
+          "Data pemeriksaan untuk anak dengan NIK ini pada tanggal tersebut sudah tercatat sebelumnya.",
         );
       } else if (formData.nikBalita.length !== 16) {
         showToast.error("NIK harus terdiri dari 16 digit angka");
@@ -323,7 +326,7 @@ export default function PencatatanAnakPage() {
                   )}
                   {isNikDuplicate && (
                     <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
-                      <span>NIK Balita ini sudah terdaftar</span>
+                      <span>Data pemeriksaan untuk NIK ini pada tanggal tersebut sudah tercatat</span>
                     </p>
                   )}
                 </div>

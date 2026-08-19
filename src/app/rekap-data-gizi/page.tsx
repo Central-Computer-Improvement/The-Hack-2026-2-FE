@@ -360,7 +360,7 @@ export default function RekapDataGiziPage() {
                   <thead>
                     <tr className="bg-[#f8f9fa] dark:bg-[#1e222d] border-b border-gray-200/80 dark:border-zinc-800 font-bold text-[13px] h-[48px]">
                       <th className="py-3 px-4 w-[24%] whitespace-nowrap">
-                        Anak &amp; NIK
+                        Anak &amp; Usia 
                       </th>
                       <th className="py-3 px-4 w-[13%] whitespace-nowrap">
                         Usia / JK

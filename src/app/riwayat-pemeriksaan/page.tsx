@@ -57,8 +57,12 @@ export default function RiwayatPemeriksaanPage() {
   );
 
   /* Page Jump Input states */
-  const [pageInputLaptop, setPageInputLaptop] = useState(String(validPageLaptop));
-  const [pageInputMonitor, setPageInputMonitor] = useState(String(validPageMonitor));
+  const [pageInputLaptop, setPageInputLaptop] = useState(
+    String(validPageLaptop),
+  );
+  const [pageInputMonitor, setPageInputMonitor] = useState(
+    String(validPageMonitor),
+  );
 
   useEffect(() => {
     setPageInputLaptop(String(validPageLaptop));
@@ -210,7 +214,7 @@ export default function RiwayatPemeriksaanPage() {
                   <thead>
                     <tr className="bg-[#f8f9fa] dark:bg-[#1e222d] border-b border-gray-200/80 dark:border-zinc-800 font-bold text-[13px] h-[48px]">
                       <th className="py-3 px-4 w-[24%] whitespace-nowrap">
-                        Anak &amp; NIK
+                        Anak &amp; Usia
                       </th>
 
                       <th className="py-3 px-4 w-[13%] whitespace-nowrap">
@@ -289,8 +293,8 @@ export default function RiwayatPemeriksaanPage() {
                   <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(max-height:849px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
                     {/* SUMMARY */}
                     <div>
-                      Halaman {validPageLaptop} dari {totalPagesLaptop} ({filteredData.length}{" "}
-                      riwayat)
+                      Halaman {validPageLaptop} dari {totalPagesLaptop} (
+                      {filteredData.length} riwayat)
                     </div>
 
                     {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
@@ -325,10 +329,15 @@ export default function RiwayatPemeriksaanPage() {
                           }
                         }}
                         onBlur={() => {
-                          if (!pageInputLaptop || parseInt(pageInputLaptop, 10) < 1) {
+                          if (
+                            !pageInputLaptop ||
+                            parseInt(pageInputLaptop, 10) < 1
+                          ) {
                             setCurrentPage(1);
                             setPageInputLaptop("1");
-                          } else if (parseInt(pageInputLaptop, 10) > totalPagesLaptop) {
+                          } else if (
+                            parseInt(pageInputLaptop, 10) > totalPagesLaptop
+                          ) {
                             setCurrentPage(totalPagesLaptop);
                             setPageInputLaptop(String(totalPagesLaptop));
                           }
@@ -348,7 +357,9 @@ export default function RiwayatPemeriksaanPage() {
                         type="button"
                         disabled={validPageLaptop >= totalPagesLaptop}
                         onClick={() =>
-                          setCurrentPage((prev) => Math.min(prev + 1, totalPagesLaptop))
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPagesLaptop),
+                          )
                         }
                         className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
                         aria-label="Halaman berikutnya"
@@ -362,8 +373,8 @@ export default function RiwayatPemeriksaanPage() {
                   <div className="h-[58px] shrink-0 px-3.5 bg-[#f8f9fa] dark:bg-[#1e222d] border-t border-gray-200/80 dark:border-zinc-800 hidden [@media(min-height:850px)]:flex items-center justify-between gap-3 text-[13px] font-medium text-zinc-500">
                     {/* SUMMARY */}
                     <div>
-                      Halaman {validPageMonitor} dari {totalPagesMonitor} ({filteredData.length}{" "}
-                      riwayat)
+                      Halaman {validPageMonitor} dari {totalPagesMonitor} (
+                      {filteredData.length} riwayat)
                     </div>
 
                     {/* CAPSULE PAGINATION CONTROL WITH DIRECT TYPE INPUT */}
@@ -398,10 +409,15 @@ export default function RiwayatPemeriksaanPage() {
                           }
                         }}
                         onBlur={() => {
-                          if (!pageInputMonitor || parseInt(pageInputMonitor, 10) < 1) {
+                          if (
+                            !pageInputMonitor ||
+                            parseInt(pageInputMonitor, 10) < 1
+                          ) {
                             setCurrentPage(1);
                             setPageInputMonitor("1");
-                          } else if (parseInt(pageInputMonitor, 10) > totalPagesMonitor) {
+                          } else if (
+                            parseInt(pageInputMonitor, 10) > totalPagesMonitor
+                          ) {
                             setCurrentPage(totalPagesMonitor);
                             setPageInputMonitor(String(totalPagesMonitor));
                           }
@@ -421,7 +437,9 @@ export default function RiwayatPemeriksaanPage() {
                         type="button"
                         disabled={validPageMonitor >= totalPagesMonitor}
                         onClick={() =>
-                          setCurrentPage((prev) => Math.min(prev + 1, totalPagesMonitor))
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPagesMonitor),
+                          )
                         }
                         className="w-8 h-8 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-[4px] transition-colors"
                         aria-label="Halaman berikutnya"

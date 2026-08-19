@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Eye, EyeOff, Zap } from "lucide-react";
+import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export const LoginForm: React.FC = () => {
@@ -67,8 +68,16 @@ export const LoginForm: React.FC = () => {
         <div>
           {/* Logo & App Name */}
           <div className="flex items-center gap-2.5 mb-5 md:mb-6">
-            <div className="w-[32px] h-[32px] rounded-lg bg-[#0d472c] flex items-center justify-center text-white shadow-xs shrink-0">
-              <Zap className="w-4 h-4 fill-white stroke-none" />
+            <div className="w-[32px] h-[32px] rounded-lg overflow-hidden flex items-center justify-center shadow-xs shrink-0">
+              <Image
+                src="/images/Logo-SimGizi.png"
+                alt="Logo SimGizi"
+                width={32}
+                height={32}
+                className="w-full h-full object-contain"
+                unoptimized
+                priority
+              />
             </div>
             <span className="font-ag text-[16px] leading-[24px] font-semibold text-zinc-900 dark:text-zinc-100">
               SimGizi

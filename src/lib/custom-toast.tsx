@@ -13,7 +13,7 @@ export const showToast = {
   success: (title: string, options?: ToastOptions) => {
     sonnerToast.custom(
       (t) => (
-        <div className="w-[305px] max-w-[calc(100vw-32px)] bg-[#F1F2F4] text-zinc-900 border border-[#DDE0E5] rounded-[14px] p-2.5 px-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between gap-2.5 relative font-inter select-none">
+        <div className="w-[305px] max-w-[calc(100vw-32px)] bg-[#F1F2F4] text-zinc-900 border border-[#DDE0E5] rounded-[14px] p-2.5 px-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-between gap-2.5 relative font-inter select-none">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {/* Left Badge */}
             <div className="w-[28px] h-[28px] rounded-[7px] bg-white border border-[#D5D8DF] text-zinc-800 flex items-center justify-center shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
@@ -45,7 +45,7 @@ export const showToast = {
   error: (title: string, options?: ToastOptions) => {
     sonnerToast.custom(
       (t) => (
-        <div className="w-[305px] max-w-[calc(100vw-32px)] bg-[#F1F2F4] text-zinc-900 border border-[#DDE0E5] rounded-[14px] p-2.5 px-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between gap-2.5 relative font-inter select-none">
+        <div className="w-[305px] max-w-[calc(100vw-32px)] bg-[#F1F2F4] text-zinc-900 border border-[#DDE0E5] rounded-[14px] p-2.5 px-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-between gap-2.5 relative font-inter select-none">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {/* Left Badge */}
             <div className="w-[28px] h-[28px] rounded-[7px] bg-white border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
@@ -77,7 +77,7 @@ export const showToast = {
   delete: (title: string, options?: ToastOptions) => {
     sonnerToast.custom(
       (t) => (
-        <div className="w-[305px] max-w-[calc(100vw-32px)] bg-[#F1F2F4] text-zinc-900 border border-[#DDE0E5] rounded-[14px] p-2.5 px-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between gap-2.5 relative font-inter select-none">
+        <div className="w-[305px] max-w-[calc(100vw-32px)] bg-[#F1F2F4] text-zinc-900 border border-[#DDE0E5] rounded-[14px] p-2.5 px-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-between gap-2.5 relative font-inter select-none">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {/* Left Badge */}
             <div className="w-[28px] h-[28px] rounded-[7px] bg-white border border-[#D5D8DF] text-zinc-800 flex items-center justify-center shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">

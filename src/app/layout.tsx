@@ -60,7 +60,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[#f8f9fa] dark:bg-[#0B0F14] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
         {children}
-        <Toaster position="bottom-right" />
+        <Toaster position="bottom-right" visibleToasts={4} />
       </body>
     </html>
   );

@@ -39,18 +39,56 @@ export default function PencatatanAnakPage() {
     formData.umurBulan !== "" &&
     (isNaN(umurNum) || umurNum > 59 || umurNum < 0);
 
+  const bbNum = parseFloat(formData.beratBadan.replace(",", "."));
+  const isBbInvalid =
+    formData.beratBadan !== "" &&
+    (isNaN(bbNum) || bbNum <= 0.0 || bbNum >= 60.0);
+
+  const maxTb = !isNaN(umurNum) && umurNum < 24 ? 110.0 : 120.0;
+  const tbNum = parseFloat(formData.tinggiBadan.replace(",", "."));
+  const isTbInvalid =
+    formData.tinggiBadan !== "" &&
+    (isNaN(tbNum) || tbNum < 45.0 || tbNum > maxTb);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const hasNikError = formData.nikBalita.length !== 16;
-    const hasUmurError = isUmurInvalid;
+    const hasUmurError =
+      isUmurInvalid || formData.umurBulan === "" || isNaN(umurNum);
+    const hasBbError =
+      isBbInvalid ||
+      formData.beratBadan === "" ||
+      isNaN(bbNum) ||
+      bbNum <= 0.0 ||
+      bbNum >= 60.0;
+    const hasTbError =
+      isTbInvalid ||
+      formData.tinggiBadan === "" ||
+      isNaN(tbNum) ||
+      tbNum < 45.0 ||
+      tbNum > maxTb;
 
-    if (hasNikError || hasUmurError) {
+    if (hasNikError || hasUmurError || hasBbError || hasTbError) {
       if (hasNikError) {
         showToast.error("NIK harus terdiri dari 16 digit angka");
       }
       if (hasUmurError) {
         showToast.error("Umur harus antara 0 - 59 bulan");
+      }
+      if (hasBbError) {
+        showToast.error(
+          formData.beratBadan !== "" && !isNaN(bbNum)
+            ? `Berat badan (${bbNum} kg) di luar rentang wajar balita (0–60 kg)`
+            : "Berat badan harus lebih dari 0 kg dan kurang dari 60 kg",
+        );
+      }
+      if (hasTbError) {
+        showToast.error(
+          formData.tinggiBadan !== "" && !isNaN(tbNum)
+            ? `Tinggi badan (${tbNum} cm) di luar rentang wajar balita (45–${maxTb} cm)`
+            : `Tinggi badan harus antara 45 - ${maxTb} cm`,
+        );
       }
       return;
     }
@@ -58,19 +96,9 @@ export default function PencatatanAnakPage() {
     setIsSubmitting(true);
 
     try {
-      const bb = parseFloat(formData.beratBadan.replace(",", "."));
-      const tb = parseFloat(formData.tinggiBadan.replace(",", "."));
-      const usia = parseInt(formData.umurBulan, 10);
-
-      if (isNaN(bb) || isNaN(tb) || bb <= 0 || tb <= 0) {
-        throw new Error(
-          "Berat badan dan tinggi badan harus diisi dengan angka valid lebih dari 0.",
-        );
-      }
-
-      if (isNaN(usia) || usia < 0 || usia > 59) {
-        throw new Error("Umur balita harus antara 0 - 59 bulan.");
-      }
+      const bb = bbNum;
+      const tb = tbNum;
+      const usia = umurNum;
 
       if (!formData.jenisKelamin) {
         throw new Error("Jenis kelamin balita harus dipilih.");
@@ -239,7 +267,7 @@ export default function PencatatanAnakPage() {
         />
 
         {/* Content Body */}
-        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1 min-h-screen">
+        <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1 xl:min-h-0 xl:overflow-hidden">
           {/* Header Section */}
           <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-zinc-900 dark:text-[#F0F3F7]">
@@ -257,19 +285,22 @@ export default function PencatatanAnakPage() {
           </div>
 
           {/* Form Card (Clean Full Width) */}
-          <div className="bg-white dark:bg-[#161920] rounded-[24px] border border-[#e6e8eb] dark:border-[#262a34] p-5 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-            <h2 className="text-[18px] font-bold text-zinc-900 dark:text-[#F0F3F7]">
+          <div className="bg-white dark:bg-[#161920] rounded-[24px] border border-[#e6e8eb] dark:border-[#262a34] p-4 sm:p-5 [@media(min-height:850px)]:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+            <h2 className="text-[17px] sm:text-[18px] font-bold text-zinc-900 dark:text-[#F0F3F7]">
               Data Identitas & Hasil Pengukuran
             </h2>
-            <p className="text-[13px] text-zinc-500 dark:text-[#9BA5B0] mt-1">
+            <p className="text-[12.5px] sm:text-[13px] text-zinc-500 dark:text-[#9BA5B0] mt-0.5 sm:mt-1">
               Balita yang memerlukan tindakan intervensi
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-[32px] mt-[32px]">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-3 sm:space-y-4 [@media(min-height:850px)]:space-y-6 mt-3 sm:mt-4 [@media(min-height:850px)]:mt-6"
+            >
               {/* Row 1: Nama Lengkap Balita & NIK Balita */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 [@media(min-height:850px)]:gap-6">
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-1.5 [@media(min-height:850px)]:mb-2.5">
                     Nama Lengkap Balita
                   </label>
                   <input
@@ -285,7 +316,7 @@ export default function PencatatanAnakPage() {
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-1.5 [@media(min-height:850px)]:mb-2.5">
                     NIK Orang Tua Balita
                   </label>
                   <input
@@ -307,9 +338,7 @@ export default function PencatatanAnakPage() {
                     className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580] focus:outline-none ${
                       isNikInvalid
                         ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
-                        : formData.nikBalita.length === 16
-                          ? "bg-white dark:bg-[#1A222C] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
-                          : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
+                        : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
                     }`}
                   />
                   {isNikInvalid && (
@@ -321,9 +350,9 @@ export default function PencatatanAnakPage() {
               </div>
 
               {/* Row 2: Umur, Jenis Kelamin, Nama Orang Tua */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5 [@media(min-height:850px)]:gap-6">
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-1.5 [@media(min-height:850px)]:mb-2.5">
                     Umur (Bulan)
                   </label>
                   <input
@@ -339,9 +368,7 @@ export default function PencatatanAnakPage() {
                     className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580] focus:outline-none ${
                       isUmurInvalid
                         ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
-                        : formData.umurBulan !== ""
-                          ? "bg-white dark:bg-[#1A222C] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
-                          : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
+                        : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
                     }`}
                   />
                   {isUmurInvalid && (
@@ -352,7 +379,7 @@ export default function PencatatanAnakPage() {
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-1.5 [@media(min-height:850px)]:mb-2.5">
                     Jenis Kelamin
                   </label>
                   <CustomSelect
@@ -371,7 +398,7 @@ export default function PencatatanAnakPage() {
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-1.5 [@media(min-height:850px)]:mb-2.5">
                     Nama Orang Tua
                   </label>
                   <input
@@ -391,9 +418,9 @@ export default function PencatatanAnakPage() {
               </div>
 
               {/* Row 3: Berat Badan & Tinggi Badan */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 [@media(min-height:850px)]:gap-6">
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-1.5 [@media(min-height:850px)]:mb-2.5">
                     Berat Badan (kg)
                   </label>
                   <input
@@ -412,12 +439,21 @@ export default function PencatatanAnakPage() {
                       }
                       setFormData({ ...formData, beratBadan: val });
                     }}
-                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1A222C] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559] focus:outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580]"
+                    className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580] focus:outline-none ${
+                      isBbInvalid
+                        ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
+                        : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
+                    }`}
                   />
+                  {isBbInvalid && (
+                    <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
+                      <span>Berat badan harus lebih dari 0 kg dan kurang dari 60 kg</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
+                  <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-1.5 [@media(min-height:850px)]:mb-2.5">
                     Tinggi Badan (cm)
                   </label>
                   <input
@@ -436,8 +472,17 @@ export default function PencatatanAnakPage() {
                       }
                       setFormData({ ...formData, tinggiBadan: val });
                     }}
-                    className="w-full h-[48px] px-4 py-3.5 bg-white dark:bg-[#1A222C] rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559] focus:outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580]"
+                    className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580] focus:outline-none ${
+                      isTbInvalid
+                        ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
+                        : "bg-white dark:bg-[#1A222C] border-gray-200 dark:border-[#232B36] focus:border-[#0d472c] dark:focus:border-[#22A559]"
+                    }`}
                   />
+                  {isTbInvalid && (
+                    <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
+                      <span>Tinggi badan harus antara 45 - {maxTb} cm</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -445,7 +490,7 @@ export default function PencatatanAnakPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#072a1a] disabled:opacity-75 disabled:cursor-not-allowed text-white font-inter text-[15.5px] font-medium rounded-[8px] transition-colors shadow-xs cursor-pointer mt-4"
+                className="w-full py-3.5 [@media(min-height:850px)]:py-4 bg-[#0d472c] hover:bg-[#0a3923] active:bg-[#072a1a] disabled:opacity-75 disabled:cursor-not-allowed text-white font-inter text-[15px] sm:text-[15.5px] font-medium rounded-[8px] transition-colors shadow-xs cursor-pointer mt-2.5 [@media(min-height:850px)]:mt-4"
               >
                 {isSubmitting
                   ? "Menganalisis & Menyimpan..."

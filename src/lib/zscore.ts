@@ -200,9 +200,13 @@ export function hitungZScore(
   const xMax = ref[key][ref[key].length - 1].x;
 
   if (numX < xMin || numX > xMax) {
+    if (indeks === "BB/PB" || indeks === "BB/TB") {
+      throw new Error(
+        `Tinggi badan (${numX} cm) di luar rentang wajar balita (${xMin}–${xMax} cm). Periksa kembali input Anda.`
+      );
+    }
     throw new Error(
-      `nilai_x=${numX} di luar rentang tabel referensi ${indeks} (${xMin}-${xMax}). ` +
-      `Cek kembali input umur/tinggi -- bisa jadi typo atau anak di luar target usia (0-59 bulan).`
+      `Umur (${numX} bulan) di luar rentang rujukan balita (${xMin}–${xMax} bulan). Periksa kembali input Anda.`
     );
   }
 

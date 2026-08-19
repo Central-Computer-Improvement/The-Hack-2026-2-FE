@@ -286,7 +286,7 @@ export default function PencatatanAnakPage() {
 
                 <div>
                   <label className="block font-inter text-[13.5px] font-medium text-zinc-800 dark:text-[#9BA5B0] mb-2.5">
-                    NIK Balita
+                    NIK Orang Tua Balita
                   </label>
                   <input
                     type="text"

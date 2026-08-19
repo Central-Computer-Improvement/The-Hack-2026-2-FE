@@ -104,8 +104,7 @@ export default function RiwayatPemeriksaanPage() {
       <td className="py-3 px-4">
         <div className="font-bold leading-tight">{item.nama}</div>
         <div className="text-[11.5px] text-zinc-400 dark:text-zinc-500 mt-0.5">
-          {item.usiaBulan} bln,{" "}
-          {item.jenisKelamin === "L" ? "Laki - Laki" : "Perempuan"}
+          {item.nik}
         </div>
       </td>
 
@@ -214,7 +213,7 @@ export default function RiwayatPemeriksaanPage() {
                   <thead>
                     <tr className="bg-[#f8f9fa] dark:bg-[#1e222d] border-b border-gray-200/80 dark:border-zinc-800 font-bold text-[13px] h-[48px]">
                       <th className="py-3 px-4 w-[24%] whitespace-nowrap">
-                        Anak &amp; Usia
+                        Anak &amp; NIK
                       </th>
 
                       <th className="py-3 px-4 w-[13%] whitespace-nowrap">

@@ -7,7 +7,7 @@ import WhoRulesModal from "@/components/_shared/WhoRulesModal";
 import CustomSelect from "@/components/forms/CustomSelect";
 import { Book } from "lucide-react";
 
-import { addDataAnak, isNikBalitaTerdaftar } from "@/lib/data-anak-store";
+import { addDataAnak } from "@/lib/data-anak-store";
 import { AnakRecord } from "@/lib/data-anak";
 import { showToast } from "@/lib/custom-toast";
 import { loadReference, nilaiGiziAnak } from "@/lib/zscore";
@@ -31,14 +31,8 @@ export default function PencatatanAnakPage() {
     alamat: "",
   });
 
-  const todayDate = new Date().toISOString().split("T")[0];
-  const targetDate = formData.tanggalPemeriksaan || todayDate;
-
   const isNikInvalid =
     formData.nikBalita.length > 0 && formData.nikBalita.length < 16;
-  const isNikDuplicate =
-    formData.nikBalita.length === 16 &&
-    isNikBalitaTerdaftar(formData.nikBalita, targetDate);
 
   const umurNum = parseInt(formData.umurBulan, 10);
   const isUmurInvalid =
@@ -47,13 +41,16 @@ export default function PencatatanAnakPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.nikBalita.length !== 16 || isUmurInvalid || isNikDuplicate) {
-      if (isNikDuplicate) {
-        showToast.error(
-          "Data pemeriksaan untuk anak dengan NIK ini pada tanggal tersebut sudah tercatat sebelumnya.",
-        );
-      } else if (formData.nikBalita.length !== 16) {
+
+    const hasNikError = formData.nikBalita.length !== 16;
+    const hasUmurError = isUmurInvalid;
+
+    if (hasNikError || hasUmurError) {
+      if (hasNikError) {
         showToast.error("NIK harus terdiri dari 16 digit angka");
+      }
+      if (hasUmurError) {
+        showToast.error("Umur harus antara 0 - 59 bulan");
       }
       return;
     }
@@ -100,7 +97,8 @@ export default function PencatatanAnakPage() {
       const statusBbtb = hasil[indeksBbPanjang].status;
 
       // 2. Penentuan Status Gizi Utama (Aturan Prioritas)
-      let status: "Normal" | "Gizi Kurang" | "Gizi Buruk" | "Stunting" = "Normal";
+      let status: "Normal" | "Gizi Kurang" | "Gizi Buruk" | "Stunting" =
+        "Normal";
 
       if (statusTbu.toLowerCase().includes("stunted")) {
         status = "Stunting";
@@ -243,15 +241,10 @@ export default function PencatatanAnakPage() {
         {/* Content Body */}
         <main className="p-4 sm:p-5 xl:p-6 flex flex-col space-y-4 [@media(min-height:850px)]:space-y-5 w-full flex-1 min-h-screen">
           {/* Header Section */}
-          <div className="flex flex-row items-center justify-between gap-4 min-h-[42px] h-[42px] shrink-0">
-            <div>
-              <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-zinc-900 dark:text-[#F0F3F7]">
-                Pencatatan Data Anak
-              </h1>
-              <p className="font-inter text-[13px] sm:text-[13.5px] text-zinc-500 dark:text-[#9BA5B0] mt-1.5 leading-normal">
-                Input data antropometri balita untuk pemantauan status gizi
-              </p>
-            </div>
+          <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-zinc-900 dark:text-[#F0F3F7]">
+              Pencatatan Data Anak
+            </h1>
 
             <button
               type="button"
@@ -312,7 +305,7 @@ export default function PencatatanAnakPage() {
                       });
                     }}
                     className={`w-full h-[48px] px-4 py-3.5 rounded-[8px] font-inter text-[13.5px] text-zinc-900 dark:text-[#F0F3F7] border transition-colors placeholder:text-zinc-400 dark:placeholder:text-[#6B7580] focus:outline-none ${
-                      isNikInvalid || isNikDuplicate
+                      isNikInvalid
                         ? "bg-rose-50/30 dark:bg-rose-950/20 border-rose-500 focus:border-rose-500 focus:ring-1.5 focus:ring-rose-500/20"
                         : formData.nikBalita.length === 16
                           ? "bg-white dark:bg-[#1A222C] border-emerald-500 dark:border-emerald-500 focus:border-emerald-600"
@@ -322,11 +315,6 @@ export default function PencatatanAnakPage() {
                   {isNikInvalid && (
                     <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
                       <span>NIK harus terdiri dari 16 digit angka</span>
-                    </p>
-                  )}
-                  {isNikDuplicate && (
-                    <p className="font-inter text-[12px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
-                      <span>Data pemeriksaan untuk NIK ini pada tanggal tersebut sudah tercatat</span>
                     </p>
                   )}
                 </div>

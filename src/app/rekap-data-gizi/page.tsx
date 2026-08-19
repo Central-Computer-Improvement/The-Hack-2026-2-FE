@@ -205,8 +205,7 @@ export default function RekapDataGiziPage() {
       <td className="py-3 px-4">
         <div className="font-bold leading-tight">{child.nama}</div>
         <div className="text-[11.5px] text-zinc-400 dark:text-zinc-500 mt-0.5">
-          {child.usiaBulan} bln,{" "}
-          {child.jenisKelamin === "L" ? "Laki - Laki" : "Perempuan"}
+          {child.nik}
         </div>
       </td>
 
@@ -360,7 +359,7 @@ export default function RekapDataGiziPage() {
                   <thead>
                     <tr className="bg-[#f8f9fa] dark:bg-[#1e222d] border-b border-gray-200/80 dark:border-zinc-800 font-bold text-[13px] h-[48px]">
                       <th className="py-3 px-4 w-[24%] whitespace-nowrap">
-                        Anak &amp; Usia 
+                        Anak &amp; NIK
                       </th>
                       <th className="py-3 px-4 w-[13%] whitespace-nowrap">
                         Usia / JK
@@ -614,8 +613,12 @@ export default function RekapDataGiziPage() {
             {/* Child Info Box */}
             <div className="border border-gray-200/70 dark:border-zinc-800 rounded-2xl p-4.5 mb-5 space-y-3 text-[13.5px] bg-white dark:bg-[#1e222d]/40">
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 dark:text-zinc-400">Nama Lengkap:</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">{selectedChild.nama}</span>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  Nama Lengkap:
+                </span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {selectedChild.nama}
+                </span>
               </div>
 
               <div className="flex justify-between items-center">
@@ -634,23 +637,29 @@ export default function RekapDataGiziPage() {
 
               <div className="flex justify-between items-center">
                 <span className="text-zinc-500 dark:text-zinc-400">Status</span>
-                <span className={`px-2.5 py-0.5 rounded-[6px] text-[12px] font-medium ${
-                  selectedChild.statusGizi === "Normal"
-                    ? "bg-[#eaf5ec] text-[#0d472c] dark:bg-emerald-950/40 dark:text-emerald-300"
-                    : selectedChild.statusGizi === "Gizi Kurang"
-                    ? "bg-[#fef6dc] text-[#b45309] dark:bg-[#332b00] dark:text-[#fde047]"
-                    : selectedChild.statusGizi === "Gizi Buruk"
-                    ? "bg-[#fff0eb] text-[#c2410c] dark:bg-[#3a1d17] dark:text-[#FFA382]"
-                    : "bg-[#fde8e8] text-[#a81a1a] dark:bg-[#3b1212] dark:text-[#f87171]"
-                }`}>
+                <span
+                  className={`px-2.5 py-0.5 rounded-[6px] text-[12px] font-medium ${
+                    selectedChild.statusGizi === "Normal"
+                      ? "bg-[#eaf5ec] text-[#0d472c] dark:bg-emerald-950/40 dark:text-emerald-300"
+                      : selectedChild.statusGizi === "Gizi Kurang"
+                        ? "bg-[#fef6dc] text-[#b45309] dark:bg-[#332b00] dark:text-[#fde047]"
+                        : selectedChild.statusGizi === "Gizi Buruk"
+                          ? "bg-[#fff0eb] text-[#c2410c] dark:bg-[#3a1d17] dark:text-[#FFA382]"
+                          : "bg-[#fde8e8] text-[#a81a1a] dark:bg-[#3b1212] dark:text-[#f87171]"
+                  }`}
+                >
                   {selectedChild.statusGizi}
                 </span>
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 dark:text-zinc-400">Z Score TB/U</span>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  Z Score TB/U
+                </span>
                 <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                  {selectedChild.zScoreTBU.includes("SD") ? selectedChild.zScoreTBU : `${selectedChild.zScoreTBU} SD`}
+                  {selectedChild.zScoreTBU.includes("SD")
+                    ? selectedChild.zScoreTBU
+                    : `${selectedChild.zScoreTBU} SD`}
                 </span>
               </div>
             </div>

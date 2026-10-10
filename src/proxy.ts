@@ -27,10 +27,11 @@ export function proxy(request: NextRequest) {
 
   const isLoginPage = pathname === "/login" || pathname.startsWith("/login");
   const isApiAuth = pathname.startsWith("/api/auth/login");
+  const isApiPublic = isApiAuth || pathname.startsWith("/api/broker/status");
 
   // 3. API Route Guard: Tolak request API privat jika belum terautentikasi
   if (pathname.startsWith("/api")) {
-    if (!hasSession && !isApiAuth) {
+    if (!hasSession && !isApiPublic) {
       return NextResponse.json(
         { success: false, error: "Autentikasi diperlukan. Sesi tidak ditemukan." },
         { status: 401 },

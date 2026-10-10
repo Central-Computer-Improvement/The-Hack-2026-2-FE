@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: simgizi-rabbitmq
+    restart: unless-stopped
+    ports:
+      # AMQP protocol port (digunakan oleh aplikasi Next.js & Worker)
+      - "5672:5672"
+      # RabbitMQ Management Web Dashboard (http://localhost:15672)
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: simgizi
+      RABBITMQ_DEFAULT_PASS: simgizi2026
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  rabbitmq_data:

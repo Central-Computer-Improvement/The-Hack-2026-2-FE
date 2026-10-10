@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { rujukanRepository } from "@/lib/repositories/rujukan.repository";
 import { updateRujukanStatusSchema } from "@/lib/validation/schemas";
 import { notifikasiRepository } from "@/lib/repositories/notifikasi.repository";
+import { anakRepository } from "@/lib/repositories/anak.repository";
+import { publishBrokerEvent } from "@/lib/broker/rabbitmq";
+import { BROKER_ROUTING_KEYS } from "@/lib/broker/events";
 
 export async function PATCH(
   request: NextRequest,
@@ -75,6 +78,34 @@ export async function PATCH(
       isi: `Puskesmas telah memperbarui status rujukan anak menjadi ${status}. ${note ? `Catatan: ${note}` : ""}`,
       tautan: "/orang-tua/notifikasi",
     });
+
+    // Producer: Terbitkan event rujukan.updated ke RabbitMQ Message Broker
+    anakRepository
+      .getById(updated.idAnak)
+      .then((anak) => {
+        publishBrokerEvent(
+          BROKER_ROUTING_KEYS.RUJUKAN_UPDATED,
+          {
+            idRujukan: updated.id,
+            idAnak: updated.idAnak,
+            namaAnak: anak?.nama || "Balita",
+            nikAnak: anak?.nik || "",
+            idPengukuran: updated.idPengukuran,
+            status: updated.status,
+            catatan: updated.catatan,
+            alasanPenolakan: status === "ditolak" ? note : undefined,
+            catatanTindakan: status !== "ditolak" ? note : undefined,
+            idPosyandu: updated.idPosyandu,
+            idPuskesmas: user.idPuskesmas || "b0000000-0000-0000-0000-000000000001",
+            namaPuskesmas: user.namaLengkap,
+            diperbaruiOleh: user.namaLengkap,
+          },
+          "puskesmas",
+        ).catch((err) =>
+          console.warn("[Message Broker] Publish rujukan update error:", err),
+        );
+      })
+      .catch((err) => console.warn("[Message Broker] Get anak error:", err));
 
     return NextResponse.json({
       success: true,

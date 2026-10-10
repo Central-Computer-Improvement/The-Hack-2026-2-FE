@@ -4,6 +4,8 @@ import { rujukanRepository } from "@/lib/repositories/rujukan.repository";
 import { createRujukanSchema } from "@/lib/validation/schemas";
 import { notifikasiRepository } from "@/lib/repositories/notifikasi.repository";
 import { anakRepository } from "@/lib/repositories/anak.repository";
+import { publishBrokerEvent } from "@/lib/broker/rabbitmq";
+import { BROKER_ROUTING_KEYS } from "@/lib/broker/events";
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,6 +92,25 @@ export async function POST(request: NextRequest) {
       isi: `Rujukan faskes masuk dari Posyandu Melati 03. ${parsed.data.catatan.substring(0, 80)}...`,
       tautan: "/puskesmas/rujukan",
     });
+
+    // Producer: Terbitkan event rujukan.created ke RabbitMQ Message Broker
+    publishBrokerEvent(
+      BROKER_ROUTING_KEYS.RUJUKAN_CREATED,
+      {
+        idRujukan: newRujukan.id,
+        idAnak: newRujukan.idAnak,
+        namaAnak: anak?.nama || "Balita",
+        nikAnak: anak?.nik || "",
+        idPengukuran: newRujukan.idPengukuran,
+        status: newRujukan.status,
+        catatan: newRujukan.catatan,
+        idPosyandu: user.idPosyandu || "",
+        namaPosyandu: user.namaPosyandu || "Posyandu Melati 03",
+        idPuskesmas: "b0000000-0000-0000-0000-000000000001",
+        namaPuskesmas: "Puskesmas Bojongsoang",
+      },
+      "posyandu",
+    ).catch((err) => console.warn("[Message Broker] Publish rujukan error:", err));
 
     return NextResponse.json(
       {

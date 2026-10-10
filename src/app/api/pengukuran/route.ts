@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { pengukuranRepository } from "@/lib/repositories/pengukuran.repository";
 import { createPengukuranSchema } from "@/lib/validation/schemas";
+import { publishBrokerEvent } from "@/lib/broker/rabbitmq";
+import { BROKER_ROUTING_KEYS } from "@/lib/broker/events";
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,6 +69,32 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await pengukuranRepository.create(parsed.data, user.id);
+
+    // Producer: Terbitkan event pengukuran.created ke RabbitMQ Message Broker
+    publishBrokerEvent(
+      BROKER_ROUTING_KEYS.PENGUKURAN_CREATED,
+      {
+        idPengukuran: result.id,
+        idAnak: result.idAnak,
+        namaAnak: result.anak?.nama || "Balita",
+        nikAnak: result.anak?.nik || "",
+        usiaBulan: result.usiaBulan,
+        beratKg: result.beratKg,
+        tinggiCm: result.tinggiCm,
+        statusGizi: result.statusGizi,
+        zTbu: result.zTbu,
+        zBbu: result.zBbu,
+        zBbtb: result.zBbtb,
+        idPosyandu: user.idPosyandu || "",
+        namaPosyandu: user.namaPosyandu,
+        rekomendasiAI: result.rekomendasi,
+        isStuntingOrWasted:
+          result.statusGizi === "stunting" ||
+          result.statusGizi === "gizi_buruk" ||
+          result.statusGizi === "gizi_kurang",
+      },
+      "posyandu",
+    ).catch((err) => console.warn("[Message Broker] Publish pengukuran error:", err));
 
     return NextResponse.json(
       {

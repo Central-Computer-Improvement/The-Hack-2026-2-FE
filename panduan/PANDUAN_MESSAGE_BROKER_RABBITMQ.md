@@ -134,7 +134,7 @@ Status Message Broker dapat dimonitor secara langsung melalui API endpoint:
 ```json
 {
   "success": true,
-  "broker": {
+  "data": {
     "connected": true,
     "url": "amqp://simgizi:****@localhost:5672",
     "exchange": "simgizi.events",
@@ -162,7 +162,24 @@ Status Message Broker dapat dimonitor secara langsung melalui API endpoint:
 
 ---
 
-## 7. Skenario Pengujian Alur Terdistribusi
+## 7. Pengujian Cepat via Skrip CLI (`npm run test:broker`) ⚡
+
+SimGizi menyediakan skrip simulasi otomatis untuk menerbitkan 3 event nyata ke Topic Exchange:
+
+```bash
+npm run test:broker
+```
+
+Perintah ini akan langsung mengirimkan:
+1. `pengukuran.created` (Data balita terindikasi stunting dari Posyandu).
+2. `rujukan.created` (Pengajuan tiket rujukan medis darurat Posyandu ke Puskesmas).
+3. `rujukan.updated` (Konfirmasi penanganan intervensi medis oleh Puskesmas).
+
+Buka terminal tempat `npm run worker` berjalan untuk melihat ketiga Consumer memproses event secara *real-time*!
+
+---
+
+## 8. Skenario Pengujian Alur Terdistribusi via Web UI (Browser)
 
 Berikut alur demo pengujian lengkap untuk juri / presentasi:
 
@@ -172,22 +189,22 @@ Berikut alur demo pengujian lengkap untuk juri / presentasi:
    - Terminal 3: `npm run dev` (sudah berjalan di port 3000)
 
 2. **Simulasi Pengukuran Baru**:
-   - Login sebagai **Kader Posyandu** (`sri.wahyuni@posyandu.simgizi.id` / `posyandu123`).
-   - Masuk ke menu **Pencatatan Data Anak**, masukkan data penimbangan anak berisiko stunting.
+   - Login sebagai **Kader Posyandu** (`kelompok2` / `simgizi2026`).
+   - Masuk ke menu **Pencatatan Data Anak** (`/pencatatan-anak`), masukkan data penimbangan anak berisiko stunting.
    - Klik **Simpan**.
    - **Hasil**:
      - Event `pengukuran.created` diterbitkan ke RabbitMQ.
      - Terminal `npm run worker` menampilkan log **Consumer 1 (Puskesmas)** memberi peringatan dini dan **Consumer 2 (Orang Tua)** mengirim rangkuman tumbuh kembang.
 
 3. **Simulasi Pengajuan Rujukan**:
-   - Ajukan rujukan anak ke Puskesmas.
+   - Di daftar riwayat / anak berisiko, klik **Rujuk ke Faskes**.
    - **Hasil**:
      - Event `rujukan.created` diterbitkan.
      - **Consumer 1 (Puskesmas)** menerima tiket triase baru.
 
 4. **Simulasi Tindak Lanjut Puskesmas**:
-   - Buka browser incognito, login sebagai **Dokter Puskesmas** (`syahla.latifah@puskesmas.simgizi.id` / `puskesmas123`).
-   - Masuk ke tab **Rujukan**, klik **Terima & Periksa** atau **Tindak Lanjuti**.
+   - Buka browser incognito, login sebagai **Dokter Puskesmas** (`puskesmas_bojongsoang` / `simgizi2026`).
+   - Masuk ke tab **Rujukan** (`/puskesmas/rujukan`), klik **Terima & Periksa** atau **Tindak Lanjuti**.
    - **Hasil**:
      - Event `rujukan.updated` diterbitkan.
-     - **Consumer 2 (Orang Tua)** dan **Consumer 3 (Audit)** langsung menerima pembaharuan data status penanganan balita.
+     - **Consumer 2 (Orang Tua)** dan **Consumer 3 (Audit)** langsung menerima pembaruan data status penanganan balita.

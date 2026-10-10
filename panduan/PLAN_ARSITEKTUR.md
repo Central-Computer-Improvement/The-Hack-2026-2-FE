@@ -12,7 +12,7 @@ Dokumen ini merupakan cetak biru (blueprint) arsitektur final, skema basis data,
 | **2** | Apakah Supabase dipakai sebagai backend, atau ada preferensi lain? | **Supabase (PostgreSQL + Supabase Auth + Row Level Security)**. Digunakan `@supabase/ssr` untuk server-side session handling di Next.js 16 (`proxy.ts` dan Server Components/Route Handlers). |
 | **3** | Struktur wilayah cukup satu tingkat (Posyandu di bawah Puskesmas), atau perlu kecamatan/kabupaten? | **Satu Tingkat Hierarki**: Posyandu berada langsung di bawah Puskesmas (`posyandu.id_puskesmas -> puskesmas.id`). Ini menyederhanakan agregasi wilayah tanpa redundansi tabel administratif. |
 | **4** | Apakah kanal notifikasi di luar aplikasi (WhatsApp, email) diperlukan pada rilis ini? | **In-App Notification First**: Tabel `notifikasi` di database dengan interface polimorfik `NotificationProvider`. Integrasi pihak ketiga (WA/Email gateway) disiapkan sebagai stub adaptor sehingga siap dihubungkan di masa depan tanpa mengubah kode pemanggil. |
-| **5** | Target hosting (Vercel atau lainnya) untuk worker dan cron? | **Vercel Serverless / Next.js Standalone**. Scheduled task menggunakan **Next.js Secured Route Handler** (`/api/cron/...`) dengan verifikasi `Bearer CRON_SECRET` (kompatibel dengan Vercel Cron atau Supabase `pg_cron` / `pg_net`), tanpa perlu dependensi broker RabbitMQ eksternal yang memerlukan server stateful khusus. |
+| **5** | Target arsitektur background processing dan integrasi antrean? | **Message Broker RabbitMQ (Docker) + Graceful Fail-Safe**. Menggunakan Topic Exchange `simgizi.events` dengan 3 Consumer mandiri (Puskesmas Triage, Orang Tua Notifikasi, Audit Laporan) serta fallback lokal non-blocking jika broker offline. |
 
 ---
 
@@ -31,15 +31,23 @@ Dokumen ini merupakan cetak biru (blueprint) arsitektur final, skema basis data,
   └── CSRF, Rate Limiting & Input Validation (Zod Schema)
           │
           ▼
-[ Application & API Layer ] (src/app/api/...)
+[ Application & API Layer (Producers) ] (src/app/api/...)
   ├── /api/auth/me
   ├── /api/anak (CRUD, detail, kode-klaim)
-  ├── /api/pengukuran (idempotent, re-calculate Z-Score di server)
-  ├── /api/rujukan (pengajuan, audit status rujukan)
+  ├── /api/pengukuran (Producer: pengukuran.created -> RabbitMQ)
+  ├── /api/rujukan (Producer: rujukan.created / rujukan.updated -> RabbitMQ)
   ├── /api/puskesmas/dashboard (agregasi faskes)
   ├── /api/orang-tua/klaim
+  ├── /api/broker/status (Health check & queue stats)
   ├── /api/rekomendasi-ai (Sanitized prompt tanpa PII, Google Gemini API Header Auth)
   └── /api/export-pdf (Dynamic query database berdasar hak akses role)
+          │
+          ▼
+[ Distributed Message Broker Layer (RabbitMQ EDA) ]
+  ├── Topic Exchange: "simgizi.events"
+  ├── Consumer 1: "simgizi.puskesmas.triage" (Triage medis & peringatan dini stunting)
+  ├── Consumer 2: "simgizi.orangtua.notifikasi" (Notifikasi ramah tumbuh kembang & rujukan)
+  └── Consumer 3: "simgizi.audit.laporan" (Audit trail & rekap wilayah Dinas Kesehatan)
           │
           ▼
 [ Domain & Engine Layer ] (STRICT LOCKED)

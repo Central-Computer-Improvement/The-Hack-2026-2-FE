@@ -29,7 +29,7 @@
 ## 2. Kredensial Akses Pengguna Sistem (6 Akun Resmi)
 
 > 🔑 **Kata Sandi (Password) Seluruh Akun**: `simgizi2026`  
-> 📖 *Rincian master data NIK balita, faskes, dan alur pengujian dapat dilihat di [PANDUAN_AKUN_DAN_DATA_CRUD.md](PANDUAN_AKUN_DAN_DATA_CRUD.md)*.
+> 📖 *Rincian master data NIK balita, faskes, dan panduan teknis tersedia di folder [`panduan/`](panduan/README.md) (*[Panduan Akun & CRUD](panduan/PANDUAN_AKUN_DAN_DATA_CRUD.md)*, *[Message Broker RabbitMQ](panduan/PANDUAN_MESSAGE_BROKER_RABBITMQ.md)*, dan *[Test Case Specification](panduan/testcase.md)*).*
 
 | No | Peran (Role) | Username | Kata Sandi | Nama Pengguna / Afiliasi | Akses Utama |
 | :---: | :--- | :--- | :--- | :--- | :--- |

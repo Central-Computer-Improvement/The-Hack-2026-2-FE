@@ -25,14 +25,61 @@ export default function BalitaBerisikoPage() {
 
           const latestMap = new Map();
           for (const p of pengukuranList) {
-            if (!latestMap.has(p.idAnak)) {
+            if (p.idAnak && !latestMap.has(p.idAnak)) {
               latestMap.set(p.idAnak, p);
             }
           }
 
+          // Sinkronisasi lokal jika kader baru saja menimbang balita di browser ini
+          if (typeof window !== "undefined") {
+            try {
+              const rawLocal = localStorage.getItem("simgizi_data_anak");
+              if (rawLocal) {
+                const localRecords = JSON.parse(rawLocal);
+                if (Array.isArray(localRecords)) {
+                  for (const lr of localRecords) {
+                    if (
+                      lr.nik &&
+                      (lr.statusGizi === "Stunting" ||
+                        lr.statusGizi === "Gizi Buruk" ||
+                        lr.statusGizi === "Gizi Kurang")
+                    ) {
+                      const parseNum = (v?: string | number) => {
+                        if (typeof v === "number") return v;
+                        if (!v) return 0;
+                        const m = String(v).match(/[-+]?[0-9]*\.?[0-9]+/);
+                        return m ? parseFloat(m[0]) : 0;
+                      };
+                      const statusGiziDb =
+                        lr.statusGizi === "Stunting"
+                          ? "stunting"
+                          : lr.statusGizi === "Gizi Buruk"
+                            ? "gizi_buruk"
+                            : "gizi_kurang";
+
+                      const localP = {
+                        idAnak: lr.id,
+                        tanggalPeriksa: lr.tanggalPeriksa,
+                        usiaBulan: lr.usiaBulan,
+                        beratKg: lr.beratBadan,
+                        tinggiCm: lr.tinggiBadan,
+                        statusGizi: statusGiziDb,
+                        zTbu: parseNum(lr.zScoreTBU),
+                        zBbu: parseNum(lr.zScoreBBU),
+                        zBbtb: parseNum(lr.zScoreBBTB),
+                        rekomendasi: lr.rekomendasiAI,
+                      };
+                      latestMap.set(lr.nik, localP);
+                    }
+                  }
+                }
+              }
+            } catch {}
+          }
+
           const berisiko: any[] = [];
           for (const a of anakList) {
-            const p = latestMap.get(a.id);
+            const p = latestMap.get(a.id) || latestMap.get(a.nik);
             if (!p) continue;
 
             if (

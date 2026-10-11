@@ -94,11 +94,39 @@ export default function RekapDataGiziPage() {
     }
   };
 
+  /* Deduplikasi mutlak balita unik berdasarkan NIK */
+  const uniqueChildren = useMemo(() => {
+    const nikMap = new Map<string, AnakRecord>();
+    const nonNik: AnakRecord[] = [];
+
+    for (const child of allChildren) {
+      if (!child.nik) {
+        nonNik.push(child);
+        continue;
+      }
+      const existing = nikMap.get(child.nik);
+      if (!existing) {
+        nikMap.set(child.nik, child);
+      } else {
+        // Ambil yang paling mutakhir (inputan baru)
+        const childIsNewer =
+          (child.id.startsWith("anak-") && !existing.id.startsWith("anak-")) ||
+          (child.tanggalPeriksa && existing.tanggalPeriksa && child.tanggalPeriksa >= existing.tanggalPeriksa);
+
+        if (childIsNewer) {
+          nikMap.set(child.nik, { ...existing, ...child, id: existing.id });
+        }
+      }
+    }
+
+    return [...Array.from(nikMap.values()), ...nonNik];
+  }, [allChildren]);
+
   /* filter */
   const filteredData = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
 
-    return allChildren.filter((child) => {
+    return uniqueChildren.filter((child) => {
       const matchesSearch =
         child.nama.toLowerCase().includes(query) || child.nik.includes(query);
 
@@ -107,7 +135,7 @@ export default function RekapDataGiziPage() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [allChildren, searchQuery, statusFilter]);
+  }, [uniqueChildren, searchQuery, statusFilter]);
 
   /* =========================================================================
      PAGINATION DATA (Murni Terpisah untuk Laptop & Monitor Tanpa State Resize)

@@ -2,64 +2,55 @@ import { Anak, CreateAnakPayload, AnakRecord, Pengukuran } from "@/types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatZScore, mapDbStatusToDisplay } from "@/lib/constants/nutrition";
 
-// In-memory fallback dataset berbasis seed data resmi
-let localAnakStore: Anak[] = [
-  {
-    id: "d0000000-0000-0000-0000-000000000001",
-    nik: "3201948392010001",
-    nama: "Muhammad Arfan",
-    tanggalLahir: "2024-04-12",
-    jenisKelamin: "L",
-    namaOrangTua: "Rahmat Hidayat",
-    alamat: "Jl. Sukabirus No. 14, RT 02/03",
-    idPosyandu: "a0000000-0000-0000-0000-000000000001",
-    createdAt: "2026-08-12T08:00:00Z",
-  },
-  {
-    id: "d0000000-0000-0000-0000-000000000002",
-    nik: "3201948392010002",
-    nama: "Aisyah Putri Humaira",
-    tanggalLahir: "2025-06-11",
-    jenisKelamin: "P",
-    namaOrangTua: "Hendra Wijaya",
-    alamat: "Jl. Sukabirus No. 25, RT 01/03",
-    idPosyandu: "a0000000-0000-0000-0000-000000000001",
-    createdAt: "2026-08-11T09:00:00Z",
-  },
-  {
-    id: "d0000000-0000-0000-0000-000000000003",
-    nik: "3201948392010003",
-    nama: "Kenzo Rafasya",
-    tanggalLahir: "2023-12-10",
-    jenisKelamin: "L",
-    namaOrangTua: "Ferry Irawan",
-    alamat: "Komp. Melati Indah B-10",
-    idPosyandu: "a0000000-0000-0000-0000-000000000001",
-    createdAt: "2026-08-10T10:00:00Z",
-  },
-  {
-    id: "d0000000-0000-0000-0000-000000000004",
-    nik: "3201948392010004",
-    nama: "Zahra Bilqis",
-    tanggalLahir: "2024-08-08",
-    jenisKelamin: "P",
-    namaOrangTua: "Dedi Supardi",
-    alamat: "Jl. Bojongsoang Kulon No. 8",
-    idPosyandu: "a0000000-0000-0000-0000-000000000001",
-    createdAt: "2026-08-08T08:30:00Z",
-  },
-  {
-    id: "d0000000-0000-0000-0000-000000000005",
-    nik: "3201948392010005",
-    nama: "Rafi Ahmad Fauzi",
-    tanggalLahir: "2023-04-05",
-    jenisKelamin: "L",
-    namaOrangTua: "Agus Setiawan",
-    alamat: "Jl. Sukabirus Gang Melati 1",
-    idPosyandu: "a0000000-0000-0000-0000-000000000001",
-    createdAt: "2026-08-05T07:45:00Z",
-  },
-];
+import { dataAnak } from "../data-anak";
+
+// In-memory dataset berbasis seluruh 30 data balita resmi
+const INITIAL_ANAK_SEED: Anak[] = dataAnak.map((d, idx) => {
+  const num = idx + 1;
+  const id = `d0000000-0000-0000-0000-${String(num).padStart(12, "0")}`;
+  const posyanduId =
+    num <= 10
+      ? "a0000000-0000-0000-0000-000000000001"
+      : num <= 20
+      ? "a0000000-0000-0000-0000-000000000002"
+      : "a0000000-0000-0000-0000-000000000003";
+
+  const periksaDate = new Date(d.tanggalPeriksa || "2026-08-12");
+  periksaDate.setMonth(periksaDate.getMonth() - d.usiaBulan);
+  const tglLahir = periksaDate.toISOString().split("T")[0];
+
+  return {
+    id,
+    nik: d.nik,
+    nama: d.nama,
+    tanggalLahir: tglLahir,
+    jenisKelamin: d.jenisKelamin,
+    namaOrangTua: d.namaOrangTua,
+    alamat:
+      num <= 10
+        ? "Jl. Sukabirus No. 14, RT 02/03"
+        : num <= 20
+        ? "Jl. Sukabirus No. 25, RT 01/03"
+        : "Komp. Melati Indah B-10",
+    idPosyandu: posyanduId,
+    createdAt: `${d.tanggalPeriksa || "2026-08-12"}T08:00:00Z`,
+  };
+});
+
+const globalForAnak = globalThis as unknown as {
+  __localAnakStore?: Anak[];
+};
+
+if (!globalForAnak.__localAnakStore) {
+  globalForAnak.__localAnakStore = [...INITIAL_ANAK_SEED];
+}
+
+const getAnakStore = (): Anak[] => {
+  if (!globalForAnak.__localAnakStore) {
+    globalForAnak.__localAnakStore = [...INITIAL_ANAK_SEED];
+  }
+  return globalForAnak.__localAnakStore;
+};
 
 export const anakRepository = {
   async getAll(options?: { posyanduId?: string; search?: string }): Promise<Anak[]> {
@@ -94,7 +85,7 @@ export const anakRepository = {
       }
     }
 
-    let result = [...localAnakStore];
+    let result = [...getAnakStore()];
     if (options?.posyanduId) {
       result = result.filter((a) => a.idPosyandu === options.posyanduId);
     }
@@ -136,7 +127,15 @@ export const anakRepository = {
         console.warn("Gagal getById dari Supabase:", err);
       }
     }
-    return localAnakStore.find((a) => a.id === id) || null;
+    const store = getAnakStore();
+    return (
+      store.find(
+        (a) =>
+          a.id === id ||
+          a.nik === id ||
+          (id.length <= 4 && a.id.endsWith(id.padStart(12, "0"))),
+      ) || null
+    );
   },
 
   async create(data: CreateAnakPayload, createdByUserId?: string): Promise<Anak> {
@@ -173,7 +172,7 @@ export const anakRepository = {
       }
     }
 
-    localAnakStore.unshift(newAnak);
+    getAnakStore().unshift(newAnak);
     return newAnak;
   },
 
@@ -189,7 +188,7 @@ export const anakRepository = {
         console.warn("Gagal soft delete anak di Supabase:", err);
       }
     }
-    localAnakStore = localAnakStore.filter((a) => a.id !== id);
+    globalForAnak.__localAnakStore = getAnakStore().filter((a) => a.id !== id);
     return true;
   },
 

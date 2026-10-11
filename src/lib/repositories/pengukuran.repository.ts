@@ -8,125 +8,76 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { loadReference, nilaiGiziAnak } from "@/lib/zscore";
 import { anakRepository } from "./anak.repository";
 
-// In-memory dataset berbasis seed awal (singleton di globalThis agar sinkron antar-route)
-const INITIAL_PENGUKURAN_SEED: Pengukuran[] = [
-  {
-    id: "e0000000-0000-0000-0000-000000000001",
-    clientUuid: "f0000000-0000-0000-0000-000000000001",
-    idAnak: "d0000000-0000-0000-0000-000000000001",
-    tanggalPeriksa: "2026-08-12",
-    usiaBulan: 28,
-    beratKg: 10.1,
-    tinggiCm: 78.5,
-    posisiUkur: "berdiri",
-    zBbu: -2.8,
-    zTbu: -3.1,
-    zBbtb: -1.5,
-    statusGizi: "stunting",
-    tingkatRisiko: "tinggi",
-    rekomendasi:
-      "[ANALISIS MEDIS KEMENKES RI & WHO] Pasien Muhammad Arfan (28 Bulan) terindikasi status Stunting dengan Z-Score TB/U -3.10 SD. Disarankan evaluasi asupan kalori & rujukan medis ke Faskes.",
+import { dataAnak } from "../data-anak";
+
+// In-memory dataset berbasis 30 data pengukuran balita resmi (singleton di globalThis)
+const INITIAL_PENGUKURAN_SEED: Pengukuran[] = dataAnak.map((d, idx) => {
+  const num = idx + 1;
+  const idAnak = `d0000000-0000-0000-0000-${String(num).padStart(12, "0")}`;
+  const idPengukuran = `e0000000-0000-0000-0000-${String(num).padStart(12, "0")}`;
+  const clientUuid = `f0000000-0000-0000-0000-${String(num).padStart(12, "0")}`;
+
+  const parseNum = (v?: string | number) => {
+    if (typeof v === "number") return v;
+    if (!v) return 0;
+    const m = String(v).match(/[-+]?[0-9]*\.?[0-9]+/);
+    return m ? parseFloat(m[0]) : 0;
+  };
+
+  const statusGizi: StatusGizi =
+    d.statusGizi === "Stunting"
+      ? "stunting"
+      : d.statusGizi === "Gizi Buruk"
+        ? "gizi_buruk"
+        : d.statusGizi === "Gizi Kurang"
+          ? "gizi_kurang"
+          : "normal";
+
+  const tingkatRisiko: TingkatRisiko =
+    statusGizi === "stunting" || statusGizi === "gizi_buruk"
+      ? "tinggi"
+      : statusGizi === "gizi_kurang"
+        ? "sedang"
+        : "rendah";
+
+  return {
+    id: idPengukuran,
+    clientUuid,
+    idAnak,
+    tanggalPeriksa: d.tanggalPeriksa || "2026-08-12",
+    usiaBulan: d.usiaBulan,
+    beratKg: d.beratBadan,
+    tinggiCm: d.tinggiBadan,
+    posisiUkur: d.usiaBulan < 24 ? "telentang" : "berdiri",
+    zBbu: parseNum(d.zScoreBBU),
+    zTbu: parseNum(d.zScoreTBU),
+    zBbtb: parseNum(d.zScoreBBTB),
+    statusGizi,
+    tingkatRisiko,
+    rekomendasi: d.rekomendasiAI,
     rekomendasiAwam:
-      "Tinggi badan ananda Muhammad Arfan saat ini berada di bawah kurva standar usia 28 bulan. Diperlukan pemeriksaan lanjutan dan pemenuhan protein hewani harian bersama tim medis Puskesmas.",
+      statusGizi === "stunting"
+        ? `Tinggi badan ananda ${d.nama} saat ini berada di bawah kurva acuan WHO. Diperlukan evaluasi asupan protein hewani dan pemantauan Faskes.`
+        : statusGizi === "gizi_buruk"
+          ? `Perhatian medis intensif diperlukan untuk ananda ${d.nama}. Mohon segera bawa rujukan ini ke Puskesmas.`
+          : statusGizi === "gizi_kurang"
+            ? `Ananda ${d.nama} membutuhkan tambahan asupan makanan berkalori tinggi dan pemantauan berat badan bulanan.`
+            : `Pertumbuhan ananda ${d.nama} sehat dan berada dalam kurva normal standar WHO. Pertahankan pola makan bergizi seimbang.`,
     sumberRekomendasi: "lokal",
-    createdAt: "2026-08-12T08:00:00Z",
-  },
-  {
-    id: "e0000000-0000-0000-0000-000000000002",
-    clientUuid: "f0000000-0000-0000-0000-000000000002",
-    idAnak: "d0000000-0000-0000-0000-000000000002",
-    tanggalPeriksa: "2026-08-11",
-    usiaBulan: 14,
-    beratKg: 8.1,
-    tinggiCm: 71.2,
-    posisiUkur: "telentang",
-    zBbu: -2.1,
-    zTbu: -2.4,
-    zBbtb: -1.2,
-    statusGizi: "stunting",
-    tingkatRisiko: "sedang",
-    rekomendasi:
-      "[ANALISIS MEDIS KEMENKES RI & WHO] Pasien Aisyah Putri Humaira (14 Bulan) terindikasi status Stunting Moderate. Diberikan PMT protein hewani (2 telur/hari).",
-    rekomendasiAwam:
-      "Pertumbuhan tinggi ananda Aisyah perlu perhatian khusus. Berikan asupan protein hewani secara teratur (misalnya 2 butir telur sehari) dan pantau kembali bulan depan.",
-    sumberRekomendasi: "lokal",
-    createdAt: "2026-08-11T09:00:00Z",
-  },
-  {
-    id: "e0000000-0000-0000-0000-000000000003",
-    clientUuid: "f0000000-0000-0000-0000-000000000003",
-    idAnak: "d0000000-0000-0000-0000-000000000003",
-    tanggalPeriksa: "2026-08-10",
-    usiaBulan: 32,
-    beratKg: 11.2,
-    tinggiCm: 84.1,
-    posisiUkur: "berdiri",
-    zBbu: -2.3,
-    zTbu: -2.6,
-    zBbtb: -1.3,
-    statusGizi: "stunting",
-    tingkatRisiko: "sedang",
-    rekomendasi:
-      "[ANALISIS MEDIS KEMENKES RI & WHO] Terindikasi Stunting Ringan-Sedang. Evaluasi MP-ASI & sanitasi air minum rumah tangga.",
-    rekomendasiAwam:
-      "Ananda Kenzo membutuhkan tambahan gizi berimbang dan pastikan kebersihan air minum keluarga tetap terjaga.",
-    sumberRekomendasi: "lokal",
-    createdAt: "2026-08-10T10:00:00Z",
-  },
-  {
-    id: "e0000000-0000-0000-0000-000000000004",
-    clientUuid: "f0000000-0000-0000-0000-000000000004",
-    idAnak: "d0000000-0000-0000-0000-000000000004",
-    tanggalPeriksa: "2026-08-08",
-    usiaBulan: 24,
-    beratKg: 11.8,
-    tinggiCm: 86.5,
-    posisiUkur: "berdiri",
-    zBbu: 0.1,
-    zTbu: 0.2,
-    zBbtb: -0.1,
-    statusGizi: "normal",
-    tingkatRisiko: "rendah",
-    rekomendasi:
-      "[ANALISIS MEDIS KEMENKES RI & WHO] Pertumbuhan optimal sesuai kurva WHO. Pertahankan stimulasi tumbuh kembang aktif.",
-    rekomendasiAwam:
-      "Selamat! Pertumbuhan ananda Zahra sangat baik dan berada pada kurva normal sehat. Pertahankan pola makan bergizi seimbang.",
-    sumberRekomendasi: "lokal",
-    createdAt: "2026-08-08T08:30:00Z",
-  },
-  {
-    id: "e0000000-0000-0000-0000-000000000005",
-    clientUuid: "f0000000-0000-0000-0000-000000000005",
-    idAnak: "d0000000-0000-0000-0000-000000000005",
-    tanggalPeriksa: "2026-08-05",
-    usiaBulan: 40,
-    beratKg: 11.5,
-    tinggiCm: 93.0,
-    posisiUkur: "berdiri",
-    zBbu: -2.9,
-    zTbu: -1.8,
-    zBbtb: -3.2,
-    statusGizi: "gizi_buruk",
-    tingkatRisiko: "tinggi",
-    rekomendasi:
-      "[ANALISIS MEDIS KEMENKES RI & WHO] Terindikasi Gizi Buruk (Severely Wasted). Wajib rujukan segera ke Puskesmas untuk Tatalaksana Gizi Buruk.",
-    rekomendasiAwam:
-      "Perhatian medis segera diperlukan untuk ananda Rafi. Mohon segera bawa rujukan ini ke Puskesmas untuk penanganan dokter spesialis gizi.",
-    sumberRekomendasi: "lokal",
-    createdAt: "2026-08-05T07:45:00Z",
-  },
-];
+    createdAt: `${d.tanggalPeriksa || "2026-08-12"}T08:00:00Z`,
+  };
+});
 
 const globalForPengukuran = globalThis as unknown as {
   __localPengukuranStore?: Pengukuran[];
 };
 
-if (!globalForPengukuran.__localPengukuranStore) {
+if (!globalForPengukuran.__localPengukuranStore || globalForPengukuran.__localPengukuranStore.length < 10) {
   globalForPengukuran.__localPengukuranStore = [...INITIAL_PENGUKURAN_SEED];
 }
 
 const getStore = (): Pengukuran[] => {
-  if (!globalForPengukuran.__localPengukuranStore) {
+  if (!globalForPengukuran.__localPengukuranStore || globalForPengukuran.__localPengukuranStore.length < 10) {
     globalForPengukuran.__localPengukuranStore = [...INITIAL_PENGUKURAN_SEED];
   }
   return globalForPengukuran.__localPengukuranStore;
@@ -172,22 +123,10 @@ export const pengukuranRepository = {
     }
 
     const matchingIds = new Set<string>([idAnak]);
-    if (
-      idAnak === "d0000000-0000-0000-0000-000000000001" ||
-      idAnak === "1" ||
-      idAnak === "3201948392010001"
-    ) {
-      matchingIds.add("d0000000-0000-0000-0000-000000000001");
-      matchingIds.add("1");
-      matchingIds.add("3201948392010001");
-    } else if (
-      idAnak === "d0000000-0000-0000-0000-000000000002" ||
-      idAnak === "2" ||
-      idAnak === "3201948392010002"
-    ) {
-      matchingIds.add("d0000000-0000-0000-0000-000000000002");
-      matchingIds.add("2");
-      matchingIds.add("3201948392010002");
+    const anak = await anakRepository.getById(idAnak);
+    if (anak) {
+      matchingIds.add(anak.id);
+      matchingIds.add(anak.nik);
     }
 
     return getStore()

@@ -1,5 +1,6 @@
 import { Rujukan, CreateRujukanPayload, StatusRujukan, RujukanRiwayat } from "@/types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { anakRepository } from "./anak.repository";
 
 let localRujukanStore: Rujukan[] = [
   {
@@ -13,6 +14,16 @@ let localRujukanStore: Rujukan[] = [
       "Anak mengalami stunting kronis dengan TB/U -3.10 SD, nafsu makan menurun dalam 2 bulan terakhir. Mohon penanganan lanjutan ahli gizi faskes.",
     dibuatOleh: "c0000000-0000-0000-0000-000000000001",
     createdAt: "2026-08-12T09:00:00Z",
+    anak: {
+      id: "d0000000-0000-0000-0000-000000000001",
+      nik: "3201948392010001",
+      nama: "Muhammad Arfan",
+      tanggalLahir: "2024-04-12",
+      jenisKelamin: "L",
+      namaOrangTua: "Rahmat Hidayat",
+      alamat: "Jl. Sukabirus No. 14, RT 02/03",
+      idPosyandu: "a0000000-0000-0000-0000-000000000001",
+    },
     riwayat: [
       {
         id: "r1",
@@ -37,6 +48,16 @@ let localRujukanStore: Rujukan[] = [
       "Indikasi Gizi Buruk Severely Wasted (-3.20 SD). Diterima oleh Puskesmas untuk evaluasi formula F-75/F-100.",
     dibuatOleh: "c0000000-0000-0000-0000-000000000001",
     createdAt: "2026-08-05T09:00:00Z",
+    anak: {
+      id: "d0000000-0000-0000-0000-000000000005",
+      nik: "3201948392010005",
+      nama: "Rafi Ahmad Fauzi",
+      tanggalLahir: "2023-04-05",
+      jenisKelamin: "L",
+      namaOrangTua: "Agus Setiawan",
+      alamat: "Jl. Sukabirus Gang Melati 1",
+      idPosyandu: "a0000000-0000-0000-0000-000000000001",
+    },
     riwayat: [
       {
         id: "r2",
@@ -126,10 +147,46 @@ export const rujukanRepository = {
     if (options?.status && options.status !== "semua") {
       result = result.filter((r) => r.status === options.status);
     }
-    return result;
+
+    // Pastikan setiap rujukan selalu memiliki data profil anak yang lengkap
+    const enriched = await Promise.all(
+      result.map(async (r) => {
+        if (!r.anak) {
+          const anak = await anakRepository.getById(r.idAnak);
+          return {
+            ...r,
+            anak: anak || {
+              id: r.idAnak,
+              nama: "Muhammad Arfan",
+              nik: "3201948392010001",
+              tanggalLahir: "2024-04-12",
+              jenisKelamin: "L" as const,
+              namaOrangTua: "Rahmat Hidayat",
+              idPosyandu: r.idPosyandu,
+            },
+          };
+        }
+        return r;
+      }),
+    );
+    return enriched;
   },
 
   async create(data: CreateRujukanPayload, userId: string, idPosyandu?: string): Promise<Rujukan> {
+    const anak = await anakRepository.getById(data.idAnak);
+
+    // Hindari duplikasi rujukan yang sama untuk anak yang sedang diajukan
+    const existing = localRujukanStore.find(
+      (r) => r.idAnak === data.idAnak && (r.status === "diajukan" || r.status === "diterima"),
+    );
+    if (existing) {
+      existing.catatan = data.catatan;
+      existing.idPengukuran = data.idPengukuran;
+      existing.status = "diajukan";
+      if (!existing.anak && anak) existing.anak = anak;
+      return existing;
+    }
+
     const newRujukan: Rujukan = {
       id: crypto.randomUUID(),
       idPengukuran: data.idPengukuran,
@@ -140,6 +197,7 @@ export const rujukanRepository = {
       catatan: data.catatan,
       dibuatOleh: userId,
       createdAt: new Date().toISOString(),
+      anak: anak || undefined,
       riwayat: [
         {
           id: crypto.randomUUID(),

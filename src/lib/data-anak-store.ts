@@ -95,7 +95,22 @@ export function useDataAnak(): AnakRecord[] {
 
 export function addDataAnak(record: AnakRecord): AnakRecord {
   const current = ensureCacheReady();
-  const updated = [record, ...current];
+  const existingIdx = current.findIndex(
+    (c) => c.nik === record.nik || c.id === record.id,
+  );
+  let updated: AnakRecord[];
+  if (existingIdx !== -1) {
+    // Jika data balita dengan NIK ini sudah ada, perbarui data penimbangannya (tidak membuat entri ganda)
+    updated = [...current];
+    updated[existingIdx] = {
+      ...updated[existingIdx],
+      ...record,
+      id: updated[existingIdx].id, // pertahankan id asli agar stabil
+    };
+  } else {
+    // Balita baru
+    updated = [record, ...current];
+  }
   persistAndNotify(updated);
   return record;
 }

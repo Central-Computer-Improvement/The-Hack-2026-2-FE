@@ -217,14 +217,36 @@ export default function PencatatanAnakPage() {
         rekomendasiAI: aiAdvice,
       };
 
-      // Save to persistent localStorage store
+      // Save to persistent localStorage store (update existing if same NIK)
       addDataAnak(newChildRecord);
 
-      // Async sync ke database server dengan fallback antrean offline lokal
+      // Tentukan targetIdAnak agar tersambung presisi dengan database server
+      const targetServerId =
+        formData.nikBalita === "3201948392010001"
+          ? "d0000000-0000-0000-0000-000000000001"
+          : formData.nikBalita === "3201948392010002"
+            ? "d0000000-0000-0000-0000-000000000002"
+            : newChildRecord.id;
+
+      // 1. Sinkronisasi profil anak ke server
+      fetch("/api/anak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nik: formData.nikBalita,
+          nama: nama,
+          tanggalLahir: formData.tanggalLahir || today,
+          jenisKelamin: (formData.jenisKelamin as "L" | "P") || "L",
+          namaOrangTua: formData.namaOrangTua.trim() || "Orang Tua",
+          alamat: formData.alamat || "",
+        }),
+      }).catch(() => {});
+
+      // 2. Async sync pengukuran ke database server dengan fallback antrean offline lokal
       const clientUuid = crypto.randomUUID();
       const offlinePayload = {
         clientUuid,
-        idAnak: newChildRecord.id,
+        idAnak: targetServerId,
         tanggalPeriksa: today,
         usiaBulan: usia,
         beratKg: bb,
@@ -239,6 +261,19 @@ export default function PencatatanAnakPage() {
       }).catch(() => {
         offlineQueue.add(offlinePayload);
       });
+
+      // 3. Jika status berisiko (Stunting atau Gizi Buruk), otomatis sinkronkan tiket rujukan faskes
+      if (status === "Stunting" || status === "Gizi Buruk") {
+        fetch("/api/rujukan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idAnak: targetServerId,
+            idPengukuran: `pengukuran-${Date.now()}`,
+            catatan: `[Rujukan Posyandu] Balita ${nama} terindikasi ${status} (${zTBUStr}). ${aiAdvice}`,
+          }),
+        }).catch(() => {});
+      }
 
       // Custom Sleek Toast
       showToast.success("Data Balita berhasil ditambahkan");

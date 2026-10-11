@@ -8,8 +8,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { loadReference, nilaiGiziAnak } from "@/lib/zscore";
 import { anakRepository } from "./anak.repository";
 
-// In-memory dataset berbasis seed awal
-let localPengukuranStore: Pengukuran[] = [
+// In-memory dataset berbasis seed awal (singleton di globalThis agar sinkron antar-route)
+const INITIAL_PENGUKURAN_SEED: Pengukuran[] = [
   {
     id: "e0000000-0000-0000-0000-000000000001",
     clientUuid: "f0000000-0000-0000-0000-000000000001",
@@ -117,6 +117,21 @@ let localPengukuranStore: Pengukuran[] = [
   },
 ];
 
+const globalForPengukuran = globalThis as unknown as {
+  __localPengukuranStore?: Pengukuran[];
+};
+
+if (!globalForPengukuran.__localPengukuranStore) {
+  globalForPengukuran.__localPengukuranStore = [...INITIAL_PENGUKURAN_SEED];
+}
+
+const getStore = (): Pengukuran[] => {
+  if (!globalForPengukuran.__localPengukuranStore) {
+    globalForPengukuran.__localPengukuranStore = [...INITIAL_PENGUKURAN_SEED];
+  }
+  return globalForPengukuran.__localPengukuranStore;
+};
+
 export const pengukuranRepository = {
   async getByAnakId(idAnak: string): Promise<Pengukuran[]> {
     const supabase = await createServerSupabaseClient();
@@ -156,8 +171,27 @@ export const pengukuranRepository = {
       }
     }
 
-    return localPengukuranStore
-      .filter((p) => p.idAnak === idAnak)
+    const matchingIds = new Set<string>([idAnak]);
+    if (
+      idAnak === "d0000000-0000-0000-0000-000000000001" ||
+      idAnak === "1" ||
+      idAnak === "3201948392010001"
+    ) {
+      matchingIds.add("d0000000-0000-0000-0000-000000000001");
+      matchingIds.add("1");
+      matchingIds.add("3201948392010001");
+    } else if (
+      idAnak === "d0000000-0000-0000-0000-000000000002" ||
+      idAnak === "2" ||
+      idAnak === "3201948392010002"
+    ) {
+      matchingIds.add("d0000000-0000-0000-0000-000000000002");
+      matchingIds.add("2");
+      matchingIds.add("3201948392010002");
+    }
+
+    return getStore()
+      .filter((p) => matchingIds.has(p.idAnak))
       .sort((a, b) => (a.tanggalPeriksa > b.tanggalPeriksa ? -1 : 1));
   },
 
@@ -217,14 +251,32 @@ export const pengukuranRepository = {
   ): Promise<Pengukuran> {
     const clientUuid = payload.clientUuid || crypto.randomUUID();
 
+    // Normalisasi ID anak jika merujuk ke Arfan / Aisyah
+    let normalizedIdAnak = payload.idAnak;
+    if (
+      normalizedIdAnak === "1" ||
+      normalizedIdAnak === "3201948392010001" ||
+      normalizedIdAnak.toLowerCase().includes("arfan")
+    ) {
+      normalizedIdAnak = "d0000000-0000-0000-0000-000000000001";
+    } else if (
+      normalizedIdAnak === "2" ||
+      normalizedIdAnak === "3201948392010002" ||
+      normalizedIdAnak.toLowerCase().includes("aisyah")
+    ) {
+      normalizedIdAnak = "d0000000-0000-0000-0000-000000000002";
+    }
+
+    const store = getStore();
+
     // Cek idempotensi: jika client_uuid sudah ada, return record yang ada
-    const existing = localPengukuranStore.find((p) => p.clientUuid === clientUuid);
+    const existing = store.find((p) => p.clientUuid === clientUuid);
     if (existing) {
       return existing;
     }
 
     // Ambil data anak untuk jenis kelamin
-    const anak = await anakRepository.getById(payload.idAnak);
+    const anak = await anakRepository.getById(normalizedIdAnak);
     const jkDomain = anak?.jenisKelamin === "P" ? "perempuan" : "laki-laki";
     const ref = loadReference();
     const calculated = nilaiGiziAnak(
@@ -282,7 +334,7 @@ export const pengukuranRepository = {
     const newPengukuran: Pengukuran = {
       id: crypto.randomUUID(),
       clientUuid,
-      idAnak: payload.idAnak,
+      idAnak: normalizedIdAnak,
       tanggalPeriksa: payload.tanggalPeriksa,
       usiaBulan: payload.usiaBulan,
       beratKg: payload.beratKg,
@@ -290,6 +342,7 @@ export const pengukuranRepository = {
       posisiUkur: pos,
       zBbu,
       zTbu,
+      zTbu: zTbu,
       zBbtb,
       statusGizi,
       tingkatRisiko,
@@ -297,6 +350,7 @@ export const pengukuranRepository = {
       rekomendasiAwam: defaultAwam,
       sumberRekomendasi: payload.sumberRekomendasi || "lokal",
       dibuatOleh: createdByUserId || null,
+      anak: anak || undefined,
       createdAt: new Date().toISOString(),
     };
 
@@ -328,7 +382,7 @@ export const pengukuranRepository = {
       }
     }
 
-    localPengukuranStore.unshift(newPengukuran);
+    store.unshift(newPengukuran);
     return newPengukuran;
   },
 };

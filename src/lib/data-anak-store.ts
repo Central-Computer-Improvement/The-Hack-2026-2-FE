@@ -10,6 +10,49 @@ const EMPTY_SNAPSHOT: AnakRecord[] = [];
 let memoryCache: AnakRecord[] | null = null;
 const listeners = new Set<() => void>();
 
+function deduplicateAnakRecords(records: AnakRecord[]): {
+  deduped: AnakRecord[];
+  hasChanged: boolean;
+} {
+  const nikMap = new Map<string, AnakRecord>();
+  const nonNik: AnakRecord[] = [];
+  let hasDuplicate = false;
+
+  for (const item of records) {
+    if (!item.nik) {
+      nonNik.push(item);
+      continue;
+    }
+
+    const existing = nikMap.get(item.nik);
+    if (!existing) {
+      nikMap.set(item.nik, item);
+    } else {
+      hasDuplicate = true;
+      // Jika ada duplikasi data balita: satukan dan prioritaskan nilai penimbangan terbaru
+      const itemIsNewer =
+        (item.id.startsWith("anak-") && !existing.id.startsWith("anak-")) ||
+        (item.tanggalPeriksa && existing.tanggalPeriksa && item.tanggalPeriksa >= existing.tanggalPeriksa);
+
+      if (itemIsNewer) {
+        nikMap.set(item.nik, {
+          ...existing,
+          ...item,
+          id: existing.id, // Pertahankan id agar navigasi stabil
+        });
+      } else {
+        nikMap.set(item.nik, {
+          ...item,
+          ...existing,
+        });
+      }
+    }
+  }
+
+  const deduped = [...nikMap.values(), ...nonNik];
+  return { deduped, hasChanged: hasDuplicate || deduped.length !== records.length };
+}
+
 function loadFromLocalStorage(): AnakRecord[] {
   if (typeof window === "undefined") {
     return EMPTY_SNAPSHOT;
@@ -20,14 +63,23 @@ function loadFromLocalStorage(): AnakRecord[] {
 
     // KASUS 1: Belum pernah ada di localStorage sama sekali (First visit)
     if (raw === null) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultDataAnak));
-      return defaultDataAnak;
+      const { deduped } = deduplicateAnakRecords(defaultDataAnak);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(deduped));
+      return deduped;
     }
 
     // KASUS 2: Sudah pernah ada data (termasuk jika datanya adalah "[]" karena semua dihapus)
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed; // Tetap kembalikan [] jika memang kosong, jangan di-reset ke default
+      const { deduped, hasChanged } = deduplicateAnakRecords(parsed);
+      if (hasChanged) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(deduped));
+        } catch (e) {
+          console.error("Gagal memperbarui dedup localStorage:", e);
+        }
+      }
+      return deduped;
     }
   } catch (e) {
     console.error("Gagal membaca data anak dari localStorage:", e);

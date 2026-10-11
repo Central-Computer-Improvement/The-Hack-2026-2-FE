@@ -4,17 +4,47 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Building2, Users, AlertTriangle, ArrowRight } from "lucide-react";
 
+const DEFAULT_POSYANDU = [
+  {
+    id: "a0000000-0000-0000-0000-000000000001",
+    nama: "Posyandu Melati 03",
+    alamat: "Balai Warga RW 03, Bojongsoang",
+    totalBalita: 2,
+    stuntingCount: 1,
+    persentaseStunting: 50,
+    terakhirUpdate: "Hari ini",
+  },
+  {
+    id: "a0000000-0000-0000-0000-000000000002",
+    nama: "Posyandu Mekar Sari 01",
+    alamat: "Balai Warga RW 01, Lengkong",
+    totalBalita: 1,
+    stuntingCount: 1,
+    persentaseStunting: 100,
+    terakhirUpdate: "11 Agustus 2026",
+  },
+  {
+    id: "a0000000-0000-0000-0000-000000000003",
+    nama: "Posyandu Mawar 02",
+    alamat: "Balai Warga RW 02, Buahbatu",
+    totalBalita: 1,
+    stuntingCount: 1,
+    persentaseStunting: 100,
+    terakhirUpdate: "10 Agustus 2026",
+  },
+];
+
 export default function PosyanduBinaanPage() {
-  const [posyanduList, setPosyanduList] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [posyanduList, setPosyanduList] = useState<any[]>(DEFAULT_POSYANDU);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch("/api/puskesmas/dashboard");
         const json = await res.json();
-        if (res.ok && json.success) {
-          setPosyanduList(json.data.posyanduStats || []);
+        if (res.ok && json.success && Array.isArray(json.data?.posyanduStats) && json.data.posyanduStats.length > 0) {
+          setPosyanduList(json.data.posyanduStats);
         }
       } catch (err) {
         console.error("Gagal load posyandu binaan:", err);

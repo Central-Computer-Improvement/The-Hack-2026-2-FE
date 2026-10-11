@@ -238,7 +238,7 @@ export const pengukuranRepository = {
       }
     }
 
-    return [...localPengukuranStore];
+    return [...getStore()];
   },
 
   /**
